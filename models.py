@@ -33,8 +33,8 @@ class RotationNetModel(tf.keras.models.Model):
     def call(self, inputs, training=None, mask=None):
         x = self.preprocess_inputs(inputs)
 
-        feature_extractor = self.base_model(inputs,training=training)
+        feature_extractor = self.base_model(inputs, training=training)
 
-        x = self.classifier(feature_extractor,training=training)
+        x = self.classifier(feature_extractor, training=training)
 
         return x
