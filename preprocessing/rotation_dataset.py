@@ -41,7 +41,7 @@ def perform_rotation(
         image = Image.open(images).resize(resize_shape)
 
         _img_name = images.split("/")
-        image_name = f"{_img_name[-3]}-{_img_name[-1]}"
+        image_name = f"{_img_name[-3]}-{_img_name[-2]}-{_img_name[-1]}"
 
         logger.info("Performing Rotation on {}".format(image_name))
         process_rotation(image,
