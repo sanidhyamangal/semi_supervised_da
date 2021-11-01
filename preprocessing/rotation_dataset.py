@@ -33,16 +33,19 @@ def perform_rotation(
     input_path: str, output_path: str,
     resize_shape: Tuple[int] = (244, 244)) -> None:
     img_path = Path(input_path)
-    all_images_path = [str(path) for path in img_path.glob("*/*")]
+    all_images_path = [str(path) for path in img_path.glob("*/*/*")]
 
     create_data_folders(output_path)
 
     for images in all_images_path:
         image = Image.open(images).resize(resize_shape)
 
-        logger.info("Performing Rotation on {}".format(images))
+        _img_name = images.split("/")
+        image_name = f"{_img_name[-3]}-{_img_name[-1]}"
+
+        logger.info("Performing Rotation on {}".format(image_name))
         process_rotation(image,
-                         image_name=images.split("/")[-1],
+                         image_name=image_name,
                          output_path=output_path)
 
 
