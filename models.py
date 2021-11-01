@@ -19,7 +19,7 @@ class RotationNetModel(tf.keras.models.Model):
                  **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.base_model = ResNet50V2(weights=None,
+        self.base_model = tf.keras.applications.ResNet50V2(weights=None,
                                      include_top=False,
                                      input_shape=image_shape)
 
@@ -27,13 +27,14 @@ class RotationNetModel(tf.keras.models.Model):
             tf.keras.layers.Dense(hidden) for hidden in num_hidden_units
         ]
         _clf_layers.append(tf.keras.layers.Dense(num_classes))
+        _clf_layers.insert(0, tf.keras.layers.Flatten())
         self.classifier = tf.keras.models.Sequential(_clf_layers)
 
     def call(self, inputs, training=None, mask=None):
         x = preprocess_input(inputs)
 
-        feature_extractor = self.base_model(inputs, training=training)
+        feature_extractor = self.base_model(x, training=training)
 
         x = self.classifier(feature_extractor, training=training)
-
+    
         return x
