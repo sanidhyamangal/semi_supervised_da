@@ -10,7 +10,6 @@ from tensorflow.keras.applications.resnet_v2 import ResNet50V2, preprocess_input
 
 
 class RotationNetModel(tf.keras.models.Model):
-    preprocess_inputs = preprocess_input
 
     def __init__(self,
                  image_shape: Tuple[int] = (244, 244, 3),
@@ -31,7 +30,7 @@ class RotationNetModel(tf.keras.models.Model):
         self.classifier = tf.keras.models.Sequential(_clf_layers)
 
     def call(self, inputs, training=None, mask=None):
-        x = self.preprocess_inputs(inputs)
+        x = preprocess_input(inputs)
 
         feature_extractor = self.base_model(inputs, training=training)
 
