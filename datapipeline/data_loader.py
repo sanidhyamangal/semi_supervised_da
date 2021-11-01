@@ -8,7 +8,8 @@ import random
 # import path for path functions
 from pathlib import Path
 from typing import Optional, Tuple
-import numpy as np # for matrix multiplication
+
+import numpy as np  # for matrix multiplication
 # import tensorflow
 import tensorflow as tf
 
@@ -111,8 +112,8 @@ class LoadData(PreprocessMixin):
 
         return ds
 
-class RotationDataLoader(LoadData):
 
+class RotationDataLoader(LoadData):
     def process_image(self, image_path, rotation):
         # read image into a raw format
         raw_image = tf.io.read_file(image_path)
@@ -127,7 +128,7 @@ class RotationDataLoader(LoadData):
         # rotated_image = tf.image.rot90(resized_image, k=tf.cast(rotation//90, dtype=tf.int32))
 
         return resized_image, rotation
-    
+
     def create_dataset(self,
                        batch_size: int,
                        shuffle: bool = True,
@@ -139,7 +140,9 @@ class RotationDataLoader(LoadData):
         prefetch = kwargs.pop('prefetch', False)
 
         # make a dataset for the labels
-        labels_dataset = tf.data.Dataset.from_tensor_slices(np.random.choice([90,180,270,360], size=len(self.all_images_path)))
+        labels_dataset = tf.data.Dataset.from_tensor_slices(
+            np.random.choice([90, 180, 270, 360],
+                             size=len(self.all_images_path)))
 
         # develop an image dataset
         image_dataset = tf.data.Dataset.from_tensor_slices(
@@ -149,8 +152,7 @@ class RotationDataLoader(LoadData):
         ds = tf.data.Dataset.zip((image_dataset, labels_dataset))
 
         # process the image dataset
-        ds = ds.map(self.process_image,
-                                          num_parallel_calls=autotune)
+        ds = ds.map(self.process_image, num_parallel_calls=autotune)
 
         # shuffle the dataset if present
         if shuffle:
