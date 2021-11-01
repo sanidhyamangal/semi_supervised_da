@@ -12,8 +12,9 @@ from models import RotationNetModel
 TRAIN_SET = "/data/maiziezhou_lab/sanidhya/rotnet/rotated_data_train"
 TEST_SET = "/data/maiziezhou_lab/sanidhya/rotnet/rotated_data_test"
 
-train_dataset = tf.keras.preprocessing.image_dataset_from_directory(TRAIN_SET, image_size=(244,244), batch_size=64)
-test_dataset = tf.keras.preprocessing.image_dataset_from_directory(TEST_SET, image_size=(244,244),batch_size=64)
+image_data = tf.keras.preprocessing.image.ImageDataGenerator()
+train_dataset = image_data.flow_from_directory(TRAIN_SET, target_size=(244,244), batch_size=64)
+test_dataset = image_data.flow_from_directory(TEST_SET, target_size=(244,244),batch_size=64)
 
 
 rotnet = RotationNetModel()
