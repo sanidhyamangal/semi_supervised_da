@@ -24,8 +24,8 @@ class RotationNetModel(tf.keras.models.Model):
                                      input_shape=image_shape)
 
         _clf_layers = [
-            tf.keras.layers.Flatten(),
             tf.keras.layers.GlobalAveragePooling2D(),
+            tf.keras.layers.Flatten(),
             tf.keras.layers.Dense(num_hidden_units),
             tf.keras.layers.Dropout(0.3),
             tf.keras.layers.Dense(num_hidden_units),
