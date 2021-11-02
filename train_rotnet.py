@@ -22,13 +22,13 @@ val_dataset_loader = LoadData(path=TEST_SET, image_shape=(244, 244), channel=3)
 train_dataset = train_dataset_loader.create_dataset(batch_size=64,
                                                     autotune=AUTOTUNE,
                                                     drop_remainder=True,
-                                                    prefetch=True)
+                                                    prefetch=True, cache=True)
 
 # prepare validation dataset for the ingestion process
 validation_dataset = val_dataset_loader.create_dataset(batch_size=64,
                                                        autotune=AUTOTUNE,
                                                        drop_remainder=True,
-                                                       prefetch=True)
+                                                       prefetch=True, cache=True)
 
 rotnet = RotationNetModel()
 
