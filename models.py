@@ -19,7 +19,7 @@ class RotationNetModel(tf.keras.models.Model):
                  **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.base_model = tf.keras.applications.ResNet101V2(weights=None,
+        self.base_model = tf.keras.applications.MobileNetV3Small(weights=None,
                                      include_top=False,
                                      input_shape=image_shape)
 

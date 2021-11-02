@@ -36,16 +36,11 @@ rotnet.compile(
     loss=[tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)],
     metrics=['accuracy'])
 
-tb_callback = tf.keras.callbacks.TensorBoard(log_dir="rotnet_101",
-                                             histogram_freq=1)
-ckpt_callback = tf.keras.callbacks.ModelCheckpoint(filepath="rotnet_models_101",
-                                                   save_weights_only=True)
-
-_tb_callback = tf.keras.callbacks.TensorBoard(log_dir="rotnet_logs",
+_tb_callback = tf.keras.callbacks.TensorBoard(log_dir="rotnet_mobilenet",
                                               histogram_freq=1)
 
 _model_check_points = tf.keras.callbacks.ModelCheckpoint(
-    filepath="rotnet_models", save_best_only=True)
+    filepath="rotnet_mobilenet", save_best_only=True)
 
 # if validation_dataset:
 rotnet.fit(train_dataset,
