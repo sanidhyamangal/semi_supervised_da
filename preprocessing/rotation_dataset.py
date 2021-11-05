@@ -44,9 +44,7 @@ def perform_rotation(
         image_name = f"{_img_name[-3]}-{_img_name[-2]}-{_img_name[-1]}"
 
         logger.info("Performing Rotation on {}".format(image_name))
-        process_rotation(image,
-                         image_name=image_name,
-                         output_path=output_path)
+        process_rotation(image, image_name=image_name, output_path=output_path)
 
 
 # ?perform_rotation("data", "rotation_data")
