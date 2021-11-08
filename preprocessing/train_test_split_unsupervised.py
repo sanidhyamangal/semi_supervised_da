@@ -72,4 +72,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    split_train_test(args.input_path, args.output_path, args.test_ration)
+    split_train_test(args.input_path, args.output_path, args.test_ratio)
