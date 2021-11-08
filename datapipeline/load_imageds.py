@@ -12,6 +12,8 @@ from typing import Optional, Tuple
 # import tensorflow
 import tensorflow as tf
 
+from datapipeline.transforms import ApplyRandomMC
+
 
 class PreprocessMixin:
     # function to make process the images
@@ -24,6 +26,23 @@ class PreprocessMixin:
         # return the resized images
         return tf.image.resize(decode_image, self.image_shape)
 
+
+class PerturbedImageProcessing:
+    def process_image(self, image_path):
+        # read image into a raw format
+        raw_image = tf.io.read_file(image_path)
+
+        # decode the image
+        decode_image = tf.image.decode_png(raw_image, channels=self.channel)
+
+        # resize the image
+        decoded_image = tf.image.resize(decode_image, self.image_shape)
+        
+        # perform random image pertubation
+        perturbed_image = ApplyRandomMC(decode_image)
+
+        return perturbed_image
+        
 
 class LoadData(PreprocessMixin):
     """
