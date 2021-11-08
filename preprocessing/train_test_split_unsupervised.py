@@ -33,7 +33,7 @@ def create_train_test_dirs(domain_path:Path, output_dir:str) -> None:
 def perform_train_test_split(domain_path:Path, output_dir:str, test_ratio:int) -> None:
     create_train_test_dirs(domain_path, output_dir)
 
-    _train_images = {img_path for img_path in domain_path.glob("*/*")}
+    _train_images = {str(img_path) for img_path in domain_path.glob("*/*")}
     _test_images = set(random.sample(_train_images, len(_train_images) // test_ratio))
 
     _train_images -= _test_images
