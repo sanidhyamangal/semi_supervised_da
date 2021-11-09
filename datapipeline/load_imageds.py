@@ -115,7 +115,7 @@ class LoadData(PreprocessMixin):
 
         # shuffle the dataset if present
         if shuffle:
-            ds = ds.shuffle(len(self.all_images_labels))
+            ds = ds.shuffle(len(self.all_images_labels), reshuffle_each_iteration=False)
 
         # create a batch of dataset
         ds = ds.batch(batch_size, drop_remainder=drop_remainder)

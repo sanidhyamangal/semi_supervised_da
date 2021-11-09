@@ -14,18 +14,16 @@ class RotationNetModel(tf.keras.models.Model):
     def __init__(self,
                  image_shape: Tuple[int] = (244, 244, 3),
                  num_classes: int = 4,
-                 num_hidden_units: int = 512,
+                 num_hidden_units: int = 256,
                  *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.base_model = tf.keras.applications.MobileNetV3Small(weights=None,
-                                     include_top=False,
+        self.base_model = tf.keras.applications.ResNet50V2(include_top=False,
                                      input_shape=image_shape)
 
         _clf_layers = [
             tf.keras.layers.GlobalAveragePooling2D(),
-            tf.keras.layers.Flatten(),
             tf.keras.layers.Dense(num_hidden_units),
             tf.keras.layers.Dropout(0.3),
             tf.keras.layers.Dense(num_hidden_units),
