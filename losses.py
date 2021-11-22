@@ -34,15 +34,15 @@ class PACLoss:
 
         return L_cr
 
-    def __call__(self, y_true, px, qx):
+    def __call__(self, y_true, ms, mt, px, qx):
         # onehot encoded y_true
         # import pdb;pdb.set_trace()
         one_hot_y_true = tf.one_hot(y_true, depth=self.depth)
 
-        _H_normal = tf.reduce_mean(self.compute_h(one_hot_y_true, px))
-        _H_perturbed = tf.reduce_mean(self.compute_h(one_hot_y_true, qx))
+        _H_source = tf.reduce_mean(self.compute_h(one_hot_y_true, ms))
+        _H_target = tf.reduce_mean(self.compute_h(one_hot_y_true, mt))
         _L_cr = self.compute_cr(px, qx)
 
-        loss = _H_normal + _H_perturbed + _L_cr
+        loss = _H_source + _H_target + _L_cr
 
         return loss
