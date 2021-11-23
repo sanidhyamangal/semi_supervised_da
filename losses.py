@@ -36,7 +36,6 @@ class PACLoss:
 
     def __call__(self, y_true, ms, mt, px, qx):
         # onehot encoded y_true
-        # import pdb;pdb.set_trace()
         one_hot_y_true = tf.one_hot(y_true, depth=self.depth)
 
         _H_source = tf.reduce_mean(self.compute_h(one_hot_y_true, ms))
