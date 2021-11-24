@@ -12,7 +12,7 @@ from typing import Optional, Tuple
 # import tensorflow
 import tensorflow as tf
 
-from transforms import GeneratePertuberations
+from datapipeline.transforms import GeneratePertuberations
 
 
 class PreprocessMixin:
