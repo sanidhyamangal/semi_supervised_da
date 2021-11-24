@@ -32,15 +32,27 @@ class BaseTrainer:
         with open(self.log_file_writer, "a+") as fp:
             fp.write(f"{loss}\n")
 
-    def train_step(self, imgs, pertubed_imgs, previous_loss):
+    def train_step(self, source_batch, target_batch,unlabeled_batch):
+        loss = 0
+        import pdb;pdb.set_trace()
         with tf.GradientTape() as tape:
+            if source_batch.has_value():
+                imgs, labels = source_batch.get_value()
+                pred = self.model(imgs)
+                loss += tf.reduce_mean(compute_h(tf.one_hot(labels, depth=self.num_classes), pred))
+
+            if target_batch.has_value():
+                imgs,labels = target_batch.get_value()
+                pred = self.model(imgs)
+                loss += tf.reduce_mean(compute_h(tf.one_hot(labels, depth=self.num_classes), pred))
+            
+            imgs = unlabeled_batch.get_value()
+            pertubed_imgs = GeneratePertuberations(imgs)
+
             px = self.model(imgs)
             qx = self.model(pertubed_imgs)
 
-            _c_loss = compute_cr(px, qx, 0.9)
-            
-
-            loss = _c_loss + previous_loss
+            loss += compute_cr(px, qx, 0.9)
 
         grads = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(
@@ -63,7 +75,6 @@ class BaseTrainer:
             unlabeled_iterator = iter(unlabeled_dataset)
 
             while True:
-                previous_loss = 0
                 source_batch = source_iterator.get_next_as_optional()
                 target_batch = target_iterator.get_next_as_optional()
                 unlabeled_batch = unlabeled_iterator.get_next_as_optional()
@@ -71,21 +82,7 @@ class BaseTrainer:
                 if not unlabeled_batch.has_value():
                     break
 
-                if source_batch.has_value():
-                    imgs, labels = source_batch.get_value()
-                    pred = self.model(imgs)
-                    previous_loss += tf.reduce_mean(compute_h(tf.one_hot(labels, depth=self.num_classes), pred))
-                
-                if target_batch.has_value():
-                    imgs,labels = target_batch.get_value()
-                    pred = self.model(imgs)
-                    previous_loss += tf.reduce_mean(compute_h(tf.one_hot(labels, depth=self.num_classes), pred))
-                
-                imgs = unlabeled_batch.get_value()
-                pertubed_imgs = GeneratePertuberations(imgs)
-
-                logger.debug(f"Calling Train Step on {previous_loss}")
-                loss = self.train_step(imgs, pertubed_imgs, previous_loss)
+                loss = self.train_step(source_batch, target_batch, unlabeled_batch)
                 logger.info(f"Batch Loss: {loss}")
                 epoch_loss.append(loss)
 
