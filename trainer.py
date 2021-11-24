@@ -74,17 +74,17 @@ class BaseTrainer:
                 if source_batch.has_value():
                     imgs, labels = source_batch.get_value()
                     pred = self.model(imgs)
-                    previous_loss += compute_h(tf.one_hot(labels, depth=self.num_classes), pred)
+                    previous_loss += tf.reduce_mean(compute_h(tf.one_hot(labels, depth=self.num_classes), pred))
                 
                 if target_batch.has_value():
                     imgs,labels = target_batch.get_value()
                     pred = self.model(imgs)
-                    previous_loss += compute_h(tf.one_hot(labels, depth=self.num_classes), pred)
+                    previous_loss += tf.reduce_mean(compute_h(tf.one_hot(labels, depth=self.num_classes), pred))
                 
                 imgs = unlabeled_batch.get_value()
                 pertubed_imgs = GeneratePertuberations(imgs)
 
-
+                logger.debug(f"Calling Train Step on {previous_loss}")
                 loss = self.train_step(imgs, pertubed_imgs, previous_loss)
                 logger.info(f"Batch Loss: {loss}")
                 epoch_loss.append(loss)
