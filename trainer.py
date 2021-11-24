@@ -54,8 +54,8 @@ class BaseTrainer:
               target_dataset,
               unlabeled_dataset,
               weights_path="str"):
-              
-        for i in epochs:
+
+        for i in range(epochs):
             # call training step
             epoch_loss = []
             source_iterator = iter(source_dataset)
