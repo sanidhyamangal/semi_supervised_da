@@ -3,7 +3,9 @@ author:Sanidhya Mangal
 github:sanidhyamangal
 """
 
+import numpy as np
 import tensorflow as tf
+from tensorflow.python.ops.gen_math_ops import mean
 from datapipeline.transforms import GeneratePertuberations  # for deep learning
 
 from losses import compute_cr, compute_h  # for loss related ops
@@ -30,37 +32,15 @@ class BaseTrainer:
         with open(self.log_file_writer, "a+") as fp:
             fp.write(f"{loss}\n")
 
-    def train_step(self, source_dataset, target_dataset, unlabelled_dataset):
-        _source_loss = []
-        _target_loss = []
-        _cr_loss = []
+    def train_step(self, imgs, pertubed_imgs, previous_loss):
         with tf.GradientTape() as tape:
-            for batch_source_images, batch_source_labels in source_dataset:
-                _src_preds = self.model(batch_source_images)
-                _src_one_hot_labels = tf.one_hot(batch_source_labels,
-                                                 depth=self.num_classes)
-                _src_loss = compute_h(_src_one_hot_labels, _src_preds)
-                _source_loss.append(_src_loss)
+            px = self.model(imgs)
+            qx = self.model(pertubed_imgs)
 
-            for batch_target_images, batch_target_labels in target_dataset:
-                _tgt_preds = self.model(batch_target_images)
-                _tgt_one_hot_labels = tf.one_hot(batch_target_labels,
-                                                 depth=self.num_classes)
-                _tgt_loss = compute_h(_tgt_one_hot_labels, _tgt_preds)
-                _target_loss.append(_tgt_loss)
+            _c_loss = compute_cr(px, qx, 0.9)
+            
 
-            for batch_unlabelled_images in unlabelled_dataset:
-                batch_perturbed_images = GeneratePertuberations(
-                    batch_unlabelled_images)
-
-                px = self.model(batch_unlabelled_images)
-                qx = self.model(batch_perturbed_images)
-
-                _c_loss = compute_cr(px, qx, 0.9)
-                _cr_loss.append(_c_loss)
-
-            loss = tf.reduce_mean(_source_loss) + tf.reduce_mean(
-                _target_loss) + tf.reduce_mean(_cr_loss)
+            loss = _c_loss + previous_loss
 
         grads = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(
@@ -72,14 +52,46 @@ class BaseTrainer:
               epochs: int,
               source_dataset,
               target_dataset,
-              unlabelled_dataset,
+              unlabeled_dataset,
               weights_path="str"):
+              
         for i in epochs:
             # call training step
-            loss = self.train_step(source_dataset, target_dataset,
-                                   unlabelled_dataset)
-            logger.info(f"Epoch: {i},Loss:{loss}")
-            self.write_logs_csv(loss)
+            epoch_loss = []
+            source_iterator = iter(source_dataset)
+            target_iterator = iter(target_dataset)
+            unlabeled_iterator = iter(unlabeled_dataset)
+
+            while True:
+                previous_loss = 0
+                source_batch = source_iterator.get_next_as_optional()
+                target_batch = target_iterator.get_next_as_optional()
+                unlabeled_batch = unlabeled_iterator.get_next_as_optional()
+
+                if not unlabeled_batch.has_value():
+                    break
+
+                if source_batch.has_value():
+                    imgs, labels = source_batch.get_value()
+                    pred = self.model(imgs)
+                    previous_loss += compute_h(tf.one_hot(labels, depth=self.num_classes), pred)
+                
+                if target_batch.has_value():
+                    imgs,labels = target_batch.get_value()
+                    pred = self.model(imgs)
+                    previous_loss += compute_h(tf.one_hot(labels, depth=self.num_classes), pred)
+                
+                imgs = unlabeled_dataset.get_value()
+                pertubed_imgs = GeneratePertuberations(imgs)
+
+
+                loss = self.train_step(imgs, pertubed_imgs, previous_loss)
+                logger.info(f"Batch Loss: {loss}")
+                epoch_loss.append(loss)
+
+            ep_loss = np.mean(epoch_loss)
+            logger.info(f"Epoch: {i},Loss:{ep_loss}")
+            self.write_logs_csv(ep_loss)
 
             if loss < self.base_loss:
                 self.save_weights(weights_path)
