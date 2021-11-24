@@ -81,7 +81,7 @@ class BaseTrainer:
                     pred = self.model(imgs)
                     previous_loss += compute_h(tf.one_hot(labels, depth=self.num_classes), pred)
                 
-                imgs = unlabeled_dataset.get_value()
+                imgs = unlabeled_batch.get_value()
                 pertubed_imgs = GeneratePertuberations(imgs)
 
 
