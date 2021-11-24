@@ -12,7 +12,6 @@ from typing import List
 
 from logger import logger
 
-
 def copy_datafiles(domain_name: str,
                    _path_list: List[str],
                    output_dir: str,

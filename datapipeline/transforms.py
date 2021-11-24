@@ -33,12 +33,14 @@ def ApplyRandomMC(image, num_ops: int = 4) -> tf.Tensor:
     img = image
 
     for op in image_ops:
-        img = TRANSFORMS[op](img,**TRANSFORM_ARGS[op])
+        img = TRANSFORMS[op](img, **TRANSFORM_ARGS[op])
 
     return img
 
 
-def GeneratePertuberations(image_dataset, num_ops:int=4):
-    pertubed_images = [ApplyRandomMC(image, num_ops) for image in image_dataset]
+def GeneratePertuberations(image_dataset, num_ops: int = 4):
+    pertubed_images = [
+        ApplyRandomMC(image, num_ops) for image in image_dataset
+    ]
 
     return tf.data.Dataset.from_tensor_slices(pertubed_images)

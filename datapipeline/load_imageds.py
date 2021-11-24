@@ -33,7 +33,7 @@ class BaseCreateDatasetMixin:
                        shuffle: bool = True,
                        autotune: Optional[int] = None,
                        drop_remainder: bool = False,
-                       pertubed_images:bool = False,
+                       pertubed_images: bool = False,
                        **kwargs):
 
         cache = kwargs.pop('cache', False)
@@ -54,8 +54,7 @@ class BaseCreateDatasetMixin:
 
         # create a perturbed imageset
         if pertubed_images:
-            pertubed_dataset = GeneratePertuberations(image_dataset, num_ops=num_transform_ops)
-            ds = tf.data.Dataset.zip((image_dataset, pertubed_dataset))
+            ds = image_dataset
         else:
             # combine and zip the dataset
             ds = tf.data.Dataset.zip((image_dataset, labels_dataset))
