@@ -69,7 +69,7 @@ def perform_train_test_validation_split(domain_path: Path, output_dir: str,
 
     copy_datafiles(domain_path.name, _train_images, output_dir)
     copy_datafiles(domain_path.name, _test_images, output_dir, "test")
-    copy_datafiles(domain_path.name, _val_images, "val")
+    copy_datafiles(domain_path.name, _val_images, output_dir,"val")
 
 def split_train_test(input_dir: str, output_dir: str, test_ratio: int = 10, split_type:str="un"):
 
