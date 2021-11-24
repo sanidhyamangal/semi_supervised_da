@@ -12,4 +12,4 @@ def create_folders_if_not_exists(path: str) -> None:
         if path.startswith("/"):
             _path[0] = "/"
 
-    os.makedirs(os.path.join(*_path), exist_ok=True)
+        os.makedirs(os.path.join(*_path), exist_ok=True)
