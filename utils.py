@@ -3,7 +3,7 @@ author:Sanidhya Mangal
 github:sanidhyamangal
 """
 
-import os # for os related ops
+import os  # for os related ops
 
 
 def create_folders_if_not_exists(path: str) -> None:

@@ -39,6 +39,8 @@ def ApplyRandomMC(image, num_ops: int = 4) -> tf.Tensor:
 
 
 def GeneratePertuberations(image_dataset, num_ops: int = 4):
-    pertubed_images = [ApplyRandomMC(image, num_ops) for image in image_dataset]
+    pertubed_images = [
+        ApplyRandomMC(image, num_ops) for image in image_dataset
+    ]
 
     return tf.convert_to_tensor(pertubed_images)

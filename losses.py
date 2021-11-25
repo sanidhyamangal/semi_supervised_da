@@ -14,6 +14,7 @@ def compute_h(px, qx):
 
     return H
 
+
 def compute_cr(px, qx, tau):
     _cr_list = []
     _H_px_qx = compute_h(px, qx)
@@ -28,6 +29,7 @@ def compute_cr(px, qx, tau):
     L_cr = tf.reduce_mean(_cr_list)
 
     return L_cr
+
 
 class PACLoss:
     def __init__(self, tau: float = 0.2, depth: int = 65):

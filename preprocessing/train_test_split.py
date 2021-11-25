@@ -12,6 +12,7 @@ from typing import List
 
 from logger import logger
 
+
 def copy_datafiles(domain_name: str,
                    _path_list: List[str],
                    output_dir: str,
@@ -24,7 +25,9 @@ def copy_datafiles(domain_name: str,
         shutil.copy(img, _new_img_path)
 
 
-def create_train_test_dirs(domain_path: Path, output_dir: str, split:List[str]=["train", "test"]) -> None:
+def create_train_test_dirs(domain_path: Path,
+                           output_dir: str,
+                           split: List[str] = ["train", "test"]) -> None:
     for _split in split:
         os.makedirs(os.path.join(output_dir, domain_path.name, _split),
                     exist_ok=True)
@@ -33,7 +36,7 @@ def create_train_test_dirs(domain_path: Path, output_dir: str, split:List[str]=[
         if _class.is_dir():
             for _split in split:
                 os.makedirs(os.path.join(output_dir, domain_path.name, _split,
-                                        _class.name),
+                                         _class.name),
                             exist_ok=True)
 
 
@@ -51,10 +54,13 @@ def perform_train_test_split(domain_path: Path, output_dir: str,
     copy_datafiles(domain_path.name, _train_images, output_dir)
     copy_datafiles(domain_path.name, _test_images, output_dir, "test")
 
-def perform_train_test_validation_split(domain_path: Path, output_dir: str,
-                             test_ratio: int) -> None:
 
-    create_train_test_dirs(domain_path, output_dir, split=["train", "test", "val"])
+def perform_train_test_validation_split(domain_path: Path, output_dir: str,
+                                        test_ratio: int) -> None:
+
+    create_train_test_dirs(domain_path,
+                           output_dir,
+                           split=["train", "test", "val"])
 
     _train_images = {str(img_path) for img_path in domain_path.glob("*/*")}
     _test_images = set(
@@ -68,9 +74,13 @@ def perform_train_test_validation_split(domain_path: Path, output_dir: str,
 
     copy_datafiles(domain_path.name, _train_images, output_dir)
     copy_datafiles(domain_path.name, _test_images, output_dir, "test")
-    copy_datafiles(domain_path.name, _val_images, output_dir,"val")
+    copy_datafiles(domain_path.name, _val_images, output_dir, "val")
 
-def split_train_test(input_dir: str, output_dir: str, test_ratio: int = 10, split_type:str="un"):
+
+def split_train_test(input_dir: str,
+                     output_dir: str,
+                     test_ratio: int = 10,
+                     split_type: str = "un"):
 
     _all_dirs_path = Path(f"{input_dir}")
 
@@ -112,4 +122,5 @@ if __name__ == "__main__":
         dest="split_type")
     args = parser.parse_args()
 
-    split_train_test(args.input_path, args.output_path, args.test_ratio, args.split_type)
+    split_train_test(args.input_path, args.output_path, args.test_ratio,
+                     args.split_type)
