@@ -102,12 +102,13 @@ class BaseTrainer:
                 self.save_weights(weights_path)
                 self.base_loss = loss
                 logger.info(f"Saving Weights at Epoch :{i} - Loss:{loss}")
-        
+
         logger.info("Training Finished !!!!")
 
     def save_weights(self, path: str) -> None:
         create_folders_if_not_exists(path)  # save path
         self.model.save_weights(path)  # save weights
+
 
 class UnsupervisedTrainer(BaseTrainer):
     def train_step(self, source_batch, unlabeled_batch):
@@ -150,11 +151,14 @@ class UnsupervisedTrainer(BaseTrainer):
                 source_batch = source_iterator.get_next_as_optional()
                 unlabeled_batch = unlabeled_iterator.get_next_as_optional()
 
-                if not unlabeled_batch.has_value():
+                if not source_batch.has_value():
                     break
 
-                loss = self.train_step(source_batch,
-                                       unlabeled_batch)
+                if not unlabeled_batch.has_value():
+                    unlabeled_iterator = iter(unlabeled_dataset)
+                    unlabeled_batch = unlabeled_iterator.get_next_as_optional()
+
+                loss = self.train_step(source_batch, unlabeled_batch)
                 logger.info(f"Batch Loss: {loss}")
                 epoch_loss.append(loss)
                 self.write_logs_csv(loss)
@@ -166,5 +170,5 @@ class UnsupervisedTrainer(BaseTrainer):
                 self.save_weights(weights_path)
                 self.base_loss = loss
                 logger.info(f"Saving Weights at Epoch :{i} - Loss:{loss}")
-        
+
         logger.info("Training Finished !!!!")

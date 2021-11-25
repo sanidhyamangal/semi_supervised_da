@@ -102,6 +102,7 @@ def train_model(args) -> None:
                   DATA_DICT["target"]["dataset"],
                   DATA_DICT["unlabeled"]["dataset"], args.path_to_save_weights)
 
+
 def train_model_unsupervised(args) -> None:
     """
     Helper function for train arg subparser to train the entire network
@@ -161,13 +162,14 @@ def train_model_unsupervised(args) -> None:
                                      pertubed_images=scope == "unlabeled"))
 
     trainer = UnsupervisedTrainer(model,
-                          optimizer=tf.keras.optimizers.Adam(args.lr),
-                          log_file_name=args.log_file_path,
-                          num_classes=len(
-                              source_dataset_loader[0].root_labels))
+                                  optimizer=tf.keras.optimizers.Adam(args.lr),
+                                  log_file_name=args.log_file_path,
+                                  num_classes=len(
+                                      source_dataset_loader[0].root_labels))
 
     trainer.train(args.epoch, DATA_DICT["source"]["dataset"],
                   DATA_DICT["unlabeled"]["dataset"], args.path_to_save_weights)
+
 
 if __name__ == "__main__":
     AUTOTUNE = tf.data.AUTOTUNE
@@ -178,7 +180,9 @@ if __name__ == "__main__":
     parser_semi = subparsers.add_parser(
         'semi',
         help='train the classification model in semi supervised fashion')
-    parser_un = subparsers.add_parser("unsupervised", help='train the classification model in semi supervised fashion')
+    parser_un = subparsers.add_parser(
+        "unsupervised",
+        help='train the classification model in semi supervised fashion')
 
     parser_predict = subparsers.add_parser(
         'predict', help='make predications for candidate SVs')
@@ -216,7 +220,8 @@ if __name__ == "__main__":
 
     parser_semi.add_argument(
         '--path_to_pretrained_weights',
-        help='path to directory from where pretrained weights needs to be loaded, default to rotnet',
+        help=
+        'path to directory from where pretrained weights needs to be loaded, default to rotnet',
         dest="path_to_pretrained_weights",
         default="pretrained_models/rotnet.h5")
     parser_semi.add_argument(
@@ -253,34 +258,35 @@ if __name__ == "__main__":
     parser_semi.set_defaults(func=train_model)
 
     parser_un.add_argument('--epoch',
-                             type=int,
-                             default=2,
-                             help='number of total epoches',
-                             dest="epoch")
+                           type=int,
+                           default=2,
+                           help='number of total epoches',
+                           dest="epoch")
     parser_un.add_argument('--batch_size',
-                             type=int,
-                             default=32,
-                             help='number of samples in one batch',
-                             dest="batch_size")
+                           type=int,
+                           default=32,
+                           help='number of samples in one batch',
+                           dest="batch_size")
     parser_un.add_argument('--lr',
-                             type=float,
-                             default=1e-3,
-                             help='initial learning rate for adam',
-                             dest="lr")
+                           type=float,
+                           default=1e-3,
+                           help='initial learning rate for adam',
+                           dest="lr")
     parser_un.add_argument('--path_to_source_dir',
-                             required=True,
-                             help='path to source dataset directory',
-                             dest="path_to_source_dir",
-                             action="append")
+                           required=True,
+                           help='path to source dataset directory',
+                           dest="path_to_source_dir",
+                           action="append")
     parser_un.add_argument('--path_to_unlabeled_dir',
-                             required=True,
-                             help='path to unlabeled dataset directory',
-                             dest="path_to_unlabeled_dir",
-                             action="append")
+                           required=True,
+                           help='path to unlabeled dataset directory',
+                           dest="path_to_unlabeled_dir",
+                           action="append")
 
     parser_un.add_argument(
         '--path_to_pretrained_weights',
-        help='path to directory from where pretrained weights needs to be loaded, default to rotnet',
+        help=
+        'path to directory from where pretrained weights needs to be loaded, default to rotnet',
         dest="path_to_pretrained_weights",
         default="pretrained_models/rotnet.h5")
     parser_un.add_argument(
@@ -295,24 +301,21 @@ if __name__ == "__main__":
         help='file name to save the model training loss in csv file',
         dest="log_file_path")
 
-    parser_un.add_argument(
-        "--height",
-        default=224,
-        type=int,
-        help="height of input images, default value is 224",
-        dest="height")
-    parser_un.add_argument(
-        "--width",
-        default=224,
-        type=int,
-        help="width of input images, default value is 224",
-        dest="width")
-    parser_un.add_argument(
-        "--channel",
-        default=3,
-        type=int,
-        help="channel of input images, default value is 3",
-        dest="channel")
+    parser_un.add_argument("--height",
+                           default=224,
+                           type=int,
+                           help="height of input images, default value is 224",
+                           dest="height")
+    parser_un.add_argument("--width",
+                           default=224,
+                           type=int,
+                           help="width of input images, default value is 224",
+                           dest="width")
+    parser_un.add_argument("--channel",
+                           default=3,
+                           type=int,
+                           help="channel of input images, default value is 3",
+                           dest="channel")
 
     parser_un.set_defaults(func=train_model_unsupervised)
 
