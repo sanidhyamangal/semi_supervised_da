@@ -86,7 +86,8 @@ class BaseTrainer:
                     break
 
                 if not target_batch.has_value():
-                    target_batch = iter(target_dataset)
+                    target_iterator = iter(target_dataset)
+                    target_batch = target_iterator.get_next_as_optional()
 
                 loss = self.train_step(source_batch, target_batch,
                                        unlabeled_batch)

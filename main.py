@@ -148,12 +148,12 @@ if __name__ == "__main__":
 
     parser_semi.add_argument(
         '--path_to_pretrained_weights',
-        required=True,
         help='path to directory from where pretrained weights needs to be loaded, default to rotnet',
         dest="path_to_pretrained_weights",
         default="pretrained_models/rotnet.h5")
     parser_semi.add_argument(
         '--path_to_save_weights',
+        required=True,
         help='path to directory where checkpoints needs to be saved',
         dest="path_to_save_weights",
         default="pretrained_models/rotnet.h5")
