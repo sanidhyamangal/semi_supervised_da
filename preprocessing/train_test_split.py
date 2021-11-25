@@ -76,6 +76,29 @@ def perform_train_test_validation_split(domain_path: Path, output_dir: str,
     copy_datafiles(domain_path.name, _test_images, output_dir, "test")
     copy_datafiles(domain_path.name, _val_images, output_dir, "val")
 
+def perform_train_test_validation_split_semi_variation(domain_path:Path, output_dir:str, test_ratio:int) -> None:
+    create_train_test_dirs(domain_path,
+                           output_dir,
+                           split=["train", "test", "val"])
+    
+    _sample_classes = [_class for _class in domain_path.glob("*") if _class.is_dir()]
+    _inc_classes = dict((_class, True) for _class in random.sample(_sample_classes, random.randint(45,60)))
+
+    _train_images = {str(img_path) for img_path in domain_path.glob("*/*")}
+
+    _test_images = {str(img_path) for img_path in domain_path.glob("*/*") if img_path.parent.name in _inc_classes}
+
+    _test_images = set(
+        random.sample(_test_images,
+                      len(_test_images) // test_ratio))
+    
+    _train_images -= _test_images
+    _val_images = set(random.sample(_train_images, len(_train_images) * 0.1))
+    _train_images -= _val_images
+    copy_datafiles(domain_path.name, _train_images, output_dir)
+    copy_datafiles(domain_path.name, _test_images, output_dir, "test")
+    copy_datafiles(domain_path.name, _val_images, output_dir, "val")
+
 
 def split_train_test(input_dir: str,
                      output_dir: str,
@@ -93,6 +116,9 @@ def split_train_test(input_dir: str,
         for domain in _all_domains:
             perform_train_test_validation_split(domain, output_dir, test_ratio)
 
+    if split_type == "semi_variation":
+        for domain in _all_domains:
+            perform_train_test_validation_split_semi_variation(domain, output_dir, test_ratio)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -117,9 +143,11 @@ if __name__ == "__main__":
     parser.add_argument(
         '--split_type',
         default="un",
-        choices=["un", "semi"],
+        choices=["un", "semi", "semi_variation"],
         help='Describe what kind of split is required for the dataset',
         dest="split_type")
+    
+
     args = parser.parse_args()
 
     split_train_test(args.input_path, args.output_path, args.test_ratio,
