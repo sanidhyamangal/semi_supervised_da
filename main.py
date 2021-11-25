@@ -10,6 +10,7 @@ import tensorflow as tf
 
 from datapipeline.load_imageds import (  # model pipeline for loading image datasets
     LoadData, PredictionDataLoader)
+from logger import logger  # for logging
 from models import PAC
 from trainer import BaseTrainer  # model manager for handing all the ops
 
@@ -36,6 +37,8 @@ def train_model(args) -> None:
                  image_shape=(args.height, args.width),
                  channel=args.channel) for _path in args.path_to_unlabeled_dir
     ]
+
+    logger.info(f"PRETRAINED WEIGHTS: {args.path_to_pretrained_weights}")
 
     # retrieve and define the model for the interconnection
     model = PAC(image_shape=(args.height, args.width, args.channel),
@@ -95,7 +98,7 @@ def train_model(args) -> None:
                           log_file_name=args.log_file_path,
                           num_classes=len(
                               source_dataset_loader[0].root_labels))
-    trainer.train(args.epochs, DATA_DICT["source"]["dataset"],
+    trainer.train(args.epoch, DATA_DICT["source"]["dataset"],
                   DATA_DICT["target"]["dataset"],
                   DATA_DICT["unlabeled"]["dataset"], args.path_to_save_weights)
 
@@ -151,7 +154,6 @@ if __name__ == "__main__":
         default="pretrained_models/rotnet.h5")
     parser_semi.add_argument(
         '--path_to_save_weights',
-        required=True,
         help='path to directory where checkpoints needs to be saved',
         dest="path_to_save_weights",
         default="pretrained_models/rotnet.h5")
