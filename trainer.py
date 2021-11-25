@@ -93,10 +93,10 @@ class BaseTrainer:
                                        unlabeled_batch)
                 logger.info(f"Batch Loss: {loss}")
                 epoch_loss.append(loss)
+                self.write_logs_csv(loss)
 
             ep_loss = np.mean(epoch_loss)
             logger.info(f"Epoch: {i},Loss:{ep_loss}")
-            self.write_logs_csv(ep_loss)
 
             if loss < self.base_loss:
                 self.save_weights(weights_path)
