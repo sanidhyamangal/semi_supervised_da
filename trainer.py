@@ -102,6 +102,8 @@ class BaseTrainer:
                 self.save_weights(weights_path)
                 self.base_loss = loss
                 logger.info(f"Saving Weights at Epoch :{i} - Loss:{loss}")
+        
+        logger.info("Training Finished !!!!")
 
     def save_weights(self, path: str) -> None:
         create_folders_if_not_exists(path)  # save path
