@@ -81,7 +81,7 @@ def perform_train_test_validation_split_semi_variation(domain_path:Path, output_
                            output_dir,
                            split=["train", "test", "val"])
     
-    _sample_classes = [_class for _class in domain_path.glob("*") if _class.is_dir()]
+    _sample_classes = [_class.name for _class in domain_path.glob("*") if _class.is_dir()]
     _inc_classes = dict((_class, True) for _class in random.sample(_sample_classes, random.randint(45,60)))
 
     _train_images = {str(img_path) for img_path in domain_path.glob("*/*")}
@@ -93,7 +93,7 @@ def perform_train_test_validation_split_semi_variation(domain_path:Path, output_
                       len(_test_images) // test_ratio))
     
     _train_images -= _test_images
-    _val_images = set(random.sample(_train_images, len(_train_images) * 0.1))
+    _val_images = set(random.sample(_train_images, len(_train_images) // 20))
     _train_images -= _val_images
     copy_datafiles(domain_path.name, _train_images, output_dir)
     copy_datafiles(domain_path.name, _test_images, output_dir, "test")
