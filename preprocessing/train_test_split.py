@@ -82,7 +82,7 @@ def perform_train_test_validation_split_semi_variation(domain_path:Path, output_
                            split=["train", "test", "val"])
     
     _sample_classes = [_class.name for _class in domain_path.glob("*") if _class.is_dir()]
-    _inc_classes = dict((_class, True) for _class in random.sample(_sample_classes, random.randint(45,60)))
+    _inc_classes = dict((_class, True) for _class in random.sample(_sample_classes, random.randint(45,55)))
 
     _train_images = {str(img_path) for img_path in domain_path.glob("*/*")}
 
