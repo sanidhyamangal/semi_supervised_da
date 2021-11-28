@@ -82,8 +82,12 @@ class BaseTrainer:
                 target_batch = target_iterator.get_next_as_optional()
                 unlabeled_batch = unlabeled_iterator.get_next_as_optional()
 
-                if not unlabeled_batch.has_value():
+                if not source_batch.has_value():
                     break
+
+                if not unlabeled_batch.has_value():
+                    unlabeled_iterator = iter(unlabeled_dataset)
+                    unlabeled_batch = unlabeled_iterator.get_next_as_optional()
 
                 if not target_batch.has_value():
                     target_iterator = iter(target_dataset)
