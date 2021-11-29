@@ -37,7 +37,7 @@ class PACLoss:
         self.depth = depth
 
     def compute_h(self, px, qx):
-        _log_softmax = tf.math.log(qx)
+        _log_softmax = tf.math.log(qx + 1e-8)
 
         H = tf.reduce_sum(tf.multiply(-px, _log_softmax), axis=1)
 
@@ -51,7 +51,7 @@ class PACLoss:
             if _mask.shape[0] == 0:
                 _max_px = 0
             else:
-                _max_px = np.max(_mask)
+                _max_px = 1
             _cr_list.append(_max_px * _h)
 
         L_cr = tf.reduce_mean(_cr_list)
