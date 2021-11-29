@@ -357,8 +357,7 @@ if __name__ == "__main__":
     parser_eval.add_argument('--path_to_domain_dir',
                              required=True,
                              help='path to domain directory to eval',
-                             dest="path_to_domain_dir",
-                             action="append")
+                             dest="path_to_domain_dir")
     parser_eval.add_argument(
         '--path_to_saved_weights',
         required=True,
