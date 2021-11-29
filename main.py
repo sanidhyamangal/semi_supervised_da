@@ -4,7 +4,8 @@ author:Sanidhya Mangal
 github:sanidhyamangal
 """
 
-import argparse  # for argument parsing
+import argparse
+import numpy as np  # for argument parsing
 
 import tensorflow as tf
 
@@ -171,6 +172,33 @@ def train_model_unsupervised(args) -> None:
                   DATA_DICT["unlabeled"]["dataset"], args.path_to_save_weights)
 
 
+def evaluate(args) -> None:
+
+    prediction_dataloader = LoadData(args.path_to_domain_dir, image_shape=[args.height, args.width])
+    prediction_dataset = prediction_dataloader.create_dataset(args.batch_size, autotune=AUTOTUNE)
+    
+    model = PAC(image_shape=(args.height, args.width, args.channel),
+                num_hidden_units=[512, 512],
+                num_classes=len(prediction_dataloader.root_labels))
+
+    model.build(input_shape=(args.height, args.width, args.channel))
+    model.load_weights(args.path_to_saved_weights)
+
+
+    accuracy = tf.keras.metrics.Accuracy()
+
+    _accuracy_metric = []
+
+    for imgs, lbls in prediction_dataset:
+        _pred = model(imgs)
+        _accu = accuracy(lbls, tf.argmax(_pred, axis=1))
+        _accuracy_metric.append(_accu.numpy())
+    
+
+    logger.info(f"EVALUATION ACCURACY:{np.mean(_accuracy_metric)}")
+    
+
+
 if __name__ == "__main__":
     AUTOTUNE = tf.data.AUTOTUNE
     parser = argparse.ArgumentParser(
@@ -184,9 +212,9 @@ if __name__ == "__main__":
         "unsupervised",
         help='train the classification model in semi supervised fashion')
 
-    parser_predict = subparsers.add_parser(
-        'predict', help='make predications for candidate SVs')
-
+    parser_eval = subparsers.add_parser(
+        'eval', help='Evaluate the performance for the target domain')
+    
     parser_semi.add_argument('--epoch',
                              type=int,
                              default=2,
@@ -318,6 +346,46 @@ if __name__ == "__main__":
                            dest="channel")
 
     parser_un.set_defaults(func=train_model_unsupervised)
+
+
+    parser_eval.add_argument('--batch_size',
+                             type=int,
+                             default=32,
+                             help='number of samples in one batch',
+                             dest="batch_size")
+    
+    parser_eval.add_argument('--path_to_domain_dir',
+                             required=True,
+                             help='path to source dataset directory',
+                             dest="path_to_source_dir",
+                             action="append")
+    parser_eval.add_argument(
+        '--path_to_saved_weights',
+        required=True,
+        help=
+        'path to directory from where pretrained weights needs to be loaded, default to rotnet',
+        dest="path_to_saved_weights")
+
+    parser_eval.add_argument(
+        "--height",
+        default=224,
+        type=int,
+        help="height of input images, default value is 224",
+        dest="height")
+    parser_eval.add_argument(
+        "--width",
+        default=224,
+        type=int,
+        help="width of input images, default value is 224",
+        dest="width")
+    parser_eval.add_argument(
+        "--channel",
+        default=3,
+        type=int,
+        help="channel of input images, default value is 3",
+        dest="channel")
+
+    parser_eval.set_defaults(func=evaluate)
 
     args = parser.parse_args()
     args.func(args)
