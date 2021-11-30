@@ -5,15 +5,16 @@ github:sanidhyamangal
 """
 
 import argparse
-import numpy as np  # for argument parsing
 
+import numpy as np  # for argument parsing
 import tensorflow as tf
 
-from datapipeline.load_imageds import (  # model pipeline for loading image datasets
-    LoadData, PredictionDataLoader)
+from datapipeline.load_imageds import \
+    LoadData  # model pipeline for loading image datasets
 from logger import logger  # for logging
 from models import PAC
-from trainer import BaseTrainer, UnsupervisedTrainer  # model manager for handing all the ops
+from trainer import BaseTrainer  # model manager for handing all the ops
+from trainer import UnsupervisedTrainer
 
 
 def train_model(args) -> None:

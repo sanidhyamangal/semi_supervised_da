@@ -12,7 +12,7 @@ from typing import Optional, Tuple
 # import tensorflow
 import tensorflow as tf
 
-from datapipeline.transforms import GeneratePertuberations
+from datapipeline.transforms import custom_augment
 
 
 class PreprocessMixin:
@@ -25,6 +25,13 @@ class PreprocessMixin:
 
         # return the resized images
         return tf.image.resize(decode_image, self.image_shape)
+
+class SuperConPreprocessMixin(PreprocessMixin):
+
+    def process_image(self, image_path):
+        un_augmented_image =  super().process_image(image_path)
+
+        return custom_augment(un_augmented_image)
 
 
 class BaseCreateDatasetMixin:
@@ -124,39 +131,34 @@ class LoadData(PreprocessMixin, BaseCreateDatasetMixin):
         return all_images_labels
 
 
-class PredictionDataLoader(PreprocessMixin):
-    """ Data loader class for loading data as a prediction set """
-    def __init__(self,
-                 path,
-                 image_shape: Tuple[int] = (224, 224),
-                 channel: int = 3) -> None:
+class LoadSuperConData(SuperConPreprocessMixin, LoadData):
+    """
+    A data loader class for loading images from the respective dirs
+    """
 
-        # load root path
-        self.path_to_dir = Path(path)
-        self.image_shape = image_shape
-        self.channel = channel
+    def load_labels(self):
+
+        # path to all the images in list of str
         self.all_images_path = [
-            str(path) for path in self.path_to_dir.glob("*.png")
+            str(path) for path in self.path_to_dir.glob("*/*/*")
         ]
 
-    def create_dataset(self,
-                       batch_size: int,
-                       autotune: Optional[int] = None,
-                       **kwargs):
-        cache = kwargs.pop('cache', False)
-        prefetch = kwargs.pop('prefetch', False)
+        # shuffle the images to add variance
+        random.shuffle(self.all_images_path)
 
-        image_ds = tf.data.Dataset.from_tensor_slices(self.all_images_path)
+        # get the list of all the dirs
+        all_root_labels = list({
+            str(path.name) for path in self.path_to_dir.glob("*/*")
+            if path.is_dir()
+        })
 
-        image_ds = image_ds.map(self.process_image,
-                                num_parallel_calls=autotune).batch(batch_size)
+        # design the dict of the labels
+        self.root_labels = dict((c, i) for i, c in enumerate(all_root_labels))
 
-        # check if cache is enabled or not
-        if cache:
-            image_ds = image_ds.cache()
+        # add the labels for all the images
+        all_images_labels = [
+            self.root_labels[Path(image).parent.name]
+            for image in self.all_images_path
+        ]
 
-        # check if prefetch is specified or not
-        if prefetch:
-            image_ds = image_ds.prefetch(prefetch)
-
-        return image_ds
+        return all_images_labels

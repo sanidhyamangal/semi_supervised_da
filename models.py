@@ -7,7 +7,7 @@ from typing import List, Tuple
 import tensorflow as tf  # for deep learning tasks
 # use resnet50 model for this task
 from tensorflow.keras.applications.resnet_v2 import preprocess_input
-
+from layers import UnitNormLayer # unit nor layer for contrastive learning
 
 class RotationNetModel(tf.keras.models.Model):
     def __init__(self,
@@ -82,3 +82,33 @@ class PAC(tf.keras.models.Model):
         x = self.classifier(feature_extractor, training=training)
 
         return x
+
+class SupervisedContrastiveEmbbeder(tf.keras.models.Model):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.base_model = tf.keras.applications.ResNet50V2(weights=None, include_top=False)
+        self.embedding_layers = tf.keras.models.Sequential([
+            tf.keras.layers.GlobalAveragePooling2D(),
+            UnitNormLayer()
+        ])
+
+
+    def call(self, inputs, training=None, mask=None):
+        x = preprocess_input(inputs)
+
+        encoded = self.base_model(x, training=training)
+
+        embeddings = self.embedding_layers(encoded, training=training)
+
+        return embeddings
+
+
+def SupConProjector(units:int=128):
+    projector = tf.keras.models.Sequential([
+        tf.keras.layers.Dense(units),
+        UnitNormLayer()
+    ])
+
+    return projector
