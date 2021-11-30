@@ -12,7 +12,7 @@ from typing import Optional, Tuple
 # import tensorflow
 import tensorflow as tf
 
-from datapipeline.transforms import ApplyRandomMC
+from datapipeline.transforms import GeneratePertuberations
 
 
 class PreprocessMixin:
@@ -27,24 +27,59 @@ class PreprocessMixin:
         return tf.image.resize(decode_image, self.image_shape)
 
 
-class PerturbedImageProcessing:
-    def process_image(self, image_path):
-        # read image into a raw format
-        raw_image = tf.io.read_file(image_path)
+class BaseCreateDatasetMixin:
+    def create_dataset(self,
+                       batch_size: int,
+                       shuffle: bool = True,
+                       autotune: Optional[int] = None,
+                       drop_remainder: bool = False,
+                       pertubed_images: bool = False,
+                       **kwargs):
 
-        # decode the image
-        decode_image = tf.image.decode_png(raw_image, channels=self.channel)
+        cache = kwargs.pop('cache', False)
+        prefetch = kwargs.pop('prefetch', False)
+        num_transform_ops = kwargs.pop("num_transformation_ops", 4)
 
-        # resize the image
-        decoded_image = tf.image.resize(decode_image, self.image_shape)
-        
-        # perform random image pertubation
-        perturbed_image = ApplyRandomMC(decode_image)
+        # make a dataset for the labels
+        labels_dataset = tf.data.Dataset.from_tensor_slices(
+            self.all_images_labels)
 
-        return perturbed_image
-        
+        # develop an image dataset
+        image_dataset = tf.data.Dataset.from_tensor_slices(
+            self.all_images_path)
 
-class LoadData(PreprocessMixin):
+        # process the image dataset
+        image_dataset = image_dataset.map(self.process_image,
+                                          num_parallel_calls=autotune)
+
+        # create a perturbed imageset
+        if pertubed_images:
+            ds = image_dataset
+        else:
+            # combine and zip the dataset
+            ds = tf.data.Dataset.zip((image_dataset, labels_dataset))
+
+        return self.perform_data_ops(ds, shuffle, cache, batch_size,
+                                     drop_remainder, prefetch)
+
+    def perform_data_ops(self, ds, shuffle, cache, batch_size, drop_remainder,
+                         prefetch):
+
+        # create a batch of dataset
+        ds = ds.batch(batch_size, drop_remainder=drop_remainder)
+
+        # check if cache is enabled or not
+        if cache:
+            ds = ds.cache()
+
+        # check if prefetch is specified or not
+        if prefetch:
+            ds = ds.prefetch(prefetch)
+
+        return ds
+
+
+class LoadData(PreprocessMixin, BaseCreateDatasetMixin):
     """
     A data loader class for loading images from the respective dirs
     """
@@ -87,48 +122,6 @@ class LoadData(PreprocessMixin):
         ]
 
         return all_images_labels
-
-    def create_dataset(self,
-                       batch_size: int,
-                       shuffle: bool = True,
-                       autotune: Optional[int] = None,
-                       drop_remainder: bool = False,
-                       **kwargs):
-
-        cache = kwargs.pop('cache', False)
-        prefetch = kwargs.pop('prefetch', False)
-
-        # make a dataset for the labels
-        labels_dataset = tf.data.Dataset.from_tensor_slices(
-            self.all_images_labels)
-
-        # develop an image dataset
-        image_dataset = tf.data.Dataset.from_tensor_slices(
-            self.all_images_path)
-
-        # process the image dataset
-        image_dataset = image_dataset.map(self.process_image,
-                                          num_parallel_calls=autotune)
-
-        # combine and zip the dataset
-        ds = tf.data.Dataset.zip((image_dataset, labels_dataset))
-
-        # shuffle the dataset if present
-        if shuffle:
-            ds = ds.shuffle(len(self.all_images_labels), reshuffle_each_iteration=False)
-
-        # create a batch of dataset
-        ds = ds.batch(batch_size, drop_remainder=drop_remainder)
-
-        # check if cache is enabled or not
-        if cache:
-            ds = ds.cache()
-
-        # check if prefetch is specified or not
-        if prefetch:
-            ds = ds.prefetch(prefetch)
-
-        return ds
 
 
 class PredictionDataLoader(PreprocessMixin):
