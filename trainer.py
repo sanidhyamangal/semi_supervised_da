@@ -205,7 +205,7 @@ class SuperConTrainer(BaseTrainer):
             loss = max_margin_contrastive_loss(projector, labels)
 
         grads = tape.gradient(loss, self.encoder_model.trainable_variables+self.projector_model.trainable_variables)
-        self.optimizer.apply(zip(grads, self.encoder_model.trainable_variables+self.projector_model.trainable_variables))
+        self.optimizer.apply_gradients(zip(grads, self.encoder_model.trainable_variables+self.projector_model.trainable_variables))
 
         return loss
     
