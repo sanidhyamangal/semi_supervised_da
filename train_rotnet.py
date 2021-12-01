@@ -8,6 +8,7 @@ import argparse  # for argument parsing
 import tensorflow as tf  # for deep learning ops
 from models import RotationNetModel
 from datapipeline.load_imageds import LoadData
+from utils import create_folders_if_not_exists
 
 def train_model(args):
     TRAIN_SET = args.path_to_train_dir
@@ -44,10 +45,11 @@ def train_model(args):
     # if validation_dataset:
     rotnet.fit(train_dataset,
             validation_data=validation_dataset,
-            epochs=50,
+            epochs=args.epoch,
             callbacks=[_tb_callback, _model_check_points])
     
     rotnet.load_weights(args.path_to_checkpoint)
+    create_folders_if_not_exists(args.path_to_save_weights)
     rotnet.base_model.save_weights(args.path_to_save_weights)
 
 # rotnet.fit(train_dataset, validation_data=validation_dataset,epochs=500, callbacks=[tb_callback, ckpt_callback])
