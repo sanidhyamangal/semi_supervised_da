@@ -83,7 +83,7 @@ class PAC(tf.keras.models.Model):
 
         return x
 
-class SupervisedContrastiveEmbbeder(tf.keras.models.Model):
+class SupervisedContrastiveEncoder(tf.keras.models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
