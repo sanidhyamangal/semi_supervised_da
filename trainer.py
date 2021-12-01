@@ -210,7 +210,7 @@ class SuperConTrainer(BaseTrainer):
         return loss
     
 
-    def train(self, train_steps:int, dataset):
+    def train(self, train_steps:int, dataset, weights_path:str):
 
         for epoch in range(train_steps):
             epoch_loss_avg = tf.keras.metrics.Mean()
@@ -225,7 +225,7 @@ class SuperConTrainer(BaseTrainer):
             if loss < self.base_loss:
                 self.save_weights(weights_path)
                 self.base_loss = loss
-                logger.info(f"Saving Weights at Epoch :{i} - Loss:{loss}")
+                logger.info(f"Saving Weights at Epoch :{epoch} - Loss:{loss}")
 
     def save_weights(self, path: str) -> None:
 
