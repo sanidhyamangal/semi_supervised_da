@@ -218,6 +218,7 @@ class SuperConTrainer(BaseTrainer):
             for images, labels in dataset:
                 loss = self.train_step(images, labels)
                 epoch_loss_avg.update_state(loss)
+                logger.info(f"Batch Loss: {loss}")
 
             self.write_logs_csv(epoch_loss_avg)
             logger.info(f"Epoch:{epoch}, Loss :{loss}")
