@@ -28,7 +28,12 @@ def train_model(args) -> None:
     projector_model = SupConProjector()
 
 
-    trainer = SuperConTrainer(encoder_model, projector_model,optimizer=tf.keras.optimizers.Adam(args.lr), log_file_name=args.log_file_path)
+    decay_steps = 1000
+    lr_decayed_fn = tf.keras.experimental.CosineDecay(
+        initial_learning_rate=0.001, decay_steps=decay_steps)
+    optimizer = tf.keras.optimizers.Adam(lr_decayed_fn)
+
+    trainer = SuperConTrainer(encoder_model, projector_model,optimizer=optimizer, log_file_name=args.log_file_path)
 
     trainer.train(args.epoch,supercon_dataset, args.path_to_save_weights)
 

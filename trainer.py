@@ -222,6 +222,11 @@ class SuperConTrainer(BaseTrainer):
             self.write_logs_csv(epoch_loss_avg)
             logger.info(f"Epoch:{epoch}, Loss :{loss}")
 
+            if loss < self.base_loss:
+                self.save_weights(weights_path)
+                self.base_loss = loss
+                logger.info(f"Saving Weights at Epoch :{i} - Loss:{loss}")
+
     def save_weights(self, path: str) -> None:
 
         create_folders_if_not_exists(path)
