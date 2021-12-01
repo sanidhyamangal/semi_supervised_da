@@ -213,20 +213,21 @@ class SuperConTrainer(BaseTrainer):
     def train(self, train_steps:int, dataset, weights_path:str):
 
         for epoch in range(train_steps):
-            epoch_loss_avg = tf.keras.metrics.Mean()
+            epoch_loss_avg = []
 
             for images, labels in dataset:
                 loss = self.train_step(images, labels)
-                epoch_loss_avg.update_state(loss)
+                epoch_loss_avg.append(loss)
                 logger.info(f"Batch Loss: {loss}")
+            
+            _ep_loss = np.mean(epoch_loss_avg)
+            self.write_logs_csv(_ep_loss)
+            logger.info(f"Epoch:{epoch}, Loss :{_ep_loss}")
 
-            self.write_logs_csv(epoch_loss_avg)
-            logger.info(f"Epoch:{epoch}, Loss :{loss}")
-
-            if loss < self.base_loss:
+            if _ep_loss < self.base_loss:
                 self.save_weights(weights_path)
-                self.base_loss = loss
-                logger.info(f"Saving Weights at Epoch :{epoch} - Loss:{loss}")
+                self.base_loss = _ep_loss
+                logger.info(f"Saving Weights at Epoch :{epoch} - Loss:{_ep_loss}")
 
     def save_weights(self, path: str) -> None:
 
