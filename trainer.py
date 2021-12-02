@@ -51,8 +51,7 @@ class BaseTrainer:
                     compute_h(tf.one_hot(labels, depth=self.num_classes),
                               pred))
 
-            imgs = unlabeled_batch.get_value()
-            pertubed_imgs = GeneratePertuberations(imgs)
+            imgs, pertubed_imgs = unlabeled_batch.get_value()
 
             px = self.model(imgs)
             qx = self.model(pertubed_imgs)
@@ -127,8 +126,7 @@ class UnsupervisedTrainer(BaseTrainer):
                     compute_h(tf.one_hot(labels, depth=self.num_classes),
                               pred))
 
-            imgs = unlabeled_batch.get_value()
-            pertubed_imgs = GeneratePertuberations(imgs)
+            imgs, pertubed_imgs = unlabeled_batch.get_value()
 
             px = self.model(imgs)
             qx = self.model(pertubed_imgs)

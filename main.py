@@ -9,8 +9,8 @@ import argparse
 import numpy as np  # for argument parsing
 import tensorflow as tf
 
-from datapipeline.load_imageds import \
-    LoadData  # model pipeline for loading image datasets
+from datapipeline.load_imageds import (  # model pipeline for loading image datasets
+    LoadData, LoadPACLabeledDataset, LoadPACUnlabeledDataset)
 from logger import logger  # for logging
 from models import PAC
 from trainer import BaseTrainer  # model manager for handing all the ops
@@ -23,19 +23,19 @@ def train_model(args) -> None:
     """
     # define data loader for the validation and trainer set
     source_dataset_loader = [
-        LoadData(path=_path,
+        LoadPACLabeledDataset(path=_path,
                  image_shape=(args.height, args.width),
                  channel=args.channel) for _path in args.path_to_source_dir
     ]
 
     target_dataset_loader = [
-        LoadData(path=_path,
+        LoadPACLabeledDataset(path=_path,
                  image_shape=(args.height, args.width),
                  channel=args.channel) for _path in args.path_to_target_dir
     ]
 
     unlabeled_dataset_loader = [
-        LoadData(path=_path,
+        LoadPACUnlabeledDataset(path=_path,
                  image_shape=(args.height, args.width),
                  channel=args.channel) for _path in args.path_to_unlabeled_dir
     ]
@@ -112,13 +112,13 @@ def train_model_unsupervised(args) -> None:
     """
     # define data loader for the validation and trainer set
     source_dataset_loader = [
-        LoadData(path=_path,
+        LoadPACLabeledDataset(path=_path,
                  image_shape=(args.height, args.width),
                  channel=args.channel) for _path in args.path_to_source_dir
     ]
 
     unlabeled_dataset_loader = [
-        LoadData(path=_path,
+        LoadPACUnlabeledDataset(path=_path,
                  image_shape=(args.height, args.width),
                  channel=args.channel) for _path in args.path_to_unlabeled_dir
     ]

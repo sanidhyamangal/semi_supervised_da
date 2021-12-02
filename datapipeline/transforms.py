@@ -50,12 +50,14 @@ def GeneratePertuberations(image_dataset, num_ops: int = 4):
 def custom_augment(image):        
     # Random flips
     image = random_apply(tf.image.flip_left_right, image, p=0.5)
+    image = random_apply(tf.image.flip_up_down, image, p=0.8)
     
     # Randomly apply transformation (color distortions) with probability p.
     image = random_apply(color_jitter, image, p=0.4)
     image = random_apply(color_drop, image, p=0.2)
 
     return (image)
+
 
 @tf.function
 def color_jitter(x, s=0.5):
@@ -65,6 +67,7 @@ def color_jitter(x, s=0.5):
     x = tf.image.random_contrast(x, lower=1-0.8*s, upper=1+0.8*s)
     x = tf.image.random_saturation(x, lower=1-0.8*s, upper=1+0.8*s)
     x = tf.image.random_hue(x, max_delta=0.2*s)
+    x = tf.clip_by_value(x, 0, 255.0)
     return x
 
 @tf.function
