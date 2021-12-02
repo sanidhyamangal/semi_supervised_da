@@ -80,11 +80,6 @@ def train_model(args) -> None:
         }
     }
     # prepare the training dataset for ingesting it into the model
-    # source_dataset =
-
-    # prepare validation dataset for the ingestion process
-    # validation_dataset =
-
     for scope in DATA_DICT:
         if len(DATA_DICT[scope]["dataloader"]) > 1:
             for i in DATA_DICT[scope]["dataloader"][1:]:
@@ -94,9 +89,15 @@ def train_model(args) -> None:
                                      drop_remainder=True,
                                      prefetch=True,
                                      pertubed_images=scope == "unlabeled"))
+    
 
+    # lr decay
+    decay_steps = 1000
+    lr_decayed_fn = tf.keras.experimental.CosineDecay(
+        initial_learning_rate=args.lr, decay_steps=decay_steps)
+    
     trainer = BaseTrainer(model,
-                          optimizer=tf.keras.optimizers.Adam(args.lr),
+                          optimizer=tf.keras.optimizers.SGD(lr_decayed_fn, momentum=0.9),
                           log_file_name=args.log_file_path,
                           num_classes=len(
                               source_dataset_loader[0].root_labels))

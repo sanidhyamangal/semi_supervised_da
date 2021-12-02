@@ -114,10 +114,10 @@ class LoadData(PreprocessMixin, BaseCreateDatasetMixin):
         random.shuffle(self.all_images_path)
 
         # get the list of all the dirs
-        all_root_labels = [
+        all_root_labels = sorted([
             str(path.name) for path in self.path_to_dir.glob("*")
             if path.is_dir()
-        ]
+        ])
 
         # design the dict of the labels
         self.root_labels = dict((c, i) for i, c in enumerate(all_root_labels))
