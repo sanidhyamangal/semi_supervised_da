@@ -69,7 +69,7 @@ def perform_train_test_validation_split(domain_path: Path, output_dir: str,
 
     _train_images -= _test_images
 
-    _val_images = set(random.sample(_train_images, len(_train_images) // 95))
+    _val_images = set(random.sample(_train_images, 195))
     _train_images -= _val_images
 
     copy_datafiles(domain_path.name, _train_images, output_dir)
