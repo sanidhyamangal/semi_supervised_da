@@ -26,13 +26,18 @@ class PreprocessMixin:
         # return the resized images
         return tf.image.resize(decode_image, self.image_shape)
 
-class SuperConPreprocessMixin(PreprocessMixin):
+class OnlyPerturbedMixin(PreprocessMixin):
 
     def process_image(self, image_path):
         un_augmented_image =  super().process_image(image_path)
 
         return custom_augment(un_augmented_image)
 
+class PerturbedAndBaseMixin(PreprocessMixin):
+    def process_pertubed_images(self, image_path):
+        un_augmented_image = self.process_image(image_path)
+
+        return un_augmented_image, custom_augment(un_augmented_image)
 
 class BaseCreateDatasetMixin:
     def create_dataset(self,
@@ -56,14 +61,12 @@ class BaseCreateDatasetMixin:
             self.all_images_path)
 
         # process the image dataset
-        image_dataset = image_dataset.map(self.process_image,
-                                          num_parallel_calls=autotune)
-
-        # create a perturbed imageset
         if pertubed_images:
+            image_dataset = image_dataset.map(self.process_pertubed_images, num_parallel_calls=autotune)
             ds = image_dataset
         else:
-            # combine and zip the dataset
+            image_dataset = image_dataset.map(self.process_image,
+                                            num_parallel_calls=autotune)
             ds = tf.data.Dataset.zip((image_dataset, labels_dataset))
 
         return self.perform_data_ops(ds, shuffle, cache, batch_size,
@@ -114,10 +117,10 @@ class LoadData(PreprocessMixin, BaseCreateDatasetMixin):
         random.shuffle(self.all_images_path)
 
         # get the list of all the dirs
-        all_root_labels = [
+        all_root_labels = sorted([
             str(path.name) for path in self.path_to_dir.glob("*")
             if path.is_dir()
-        ]
+        ])
 
         # design the dict of the labels
         self.root_labels = dict((c, i) for i, c in enumerate(all_root_labels))
@@ -130,8 +133,13 @@ class LoadData(PreprocessMixin, BaseCreateDatasetMixin):
 
         return all_images_labels
 
+class LoadPACLabeledDataset(OnlyPerturbedMixin, PerturbedAndBaseMixin,LoadData):
+    pass
 
-class LoadSuperConData(SuperConPreprocessMixin, LoadData):
+class LoadPACUnlabeledDataset(PerturbedAndBaseMixin, LoadData):
+    pass
+
+class LoadSuperConData(OnlyPerturbedMixin, LoadData):
     """
     A data loader class for loading images from the respective dirs
     """

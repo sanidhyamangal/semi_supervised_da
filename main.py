@@ -9,8 +9,8 @@ import argparse
 import numpy as np  # for argument parsing
 import tensorflow as tf
 
-from datapipeline.load_imageds import \
-    LoadData  # model pipeline for loading image datasets
+from datapipeline.load_imageds import (  # model pipeline for loading image datasets
+    LoadData, LoadPACLabeledDataset, LoadPACUnlabeledDataset)
 from logger import logger  # for logging
 from models import PAC
 from trainer import BaseTrainer  # model manager for handing all the ops
@@ -23,19 +23,19 @@ def train_model(args) -> None:
     """
     # define data loader for the validation and trainer set
     source_dataset_loader = [
-        LoadData(path=_path,
+        LoadPACLabeledDataset(path=_path,
                  image_shape=(args.height, args.width),
                  channel=args.channel) for _path in args.path_to_source_dir
     ]
 
     target_dataset_loader = [
-        LoadData(path=_path,
+        LoadPACLabeledDataset(path=_path,
                  image_shape=(args.height, args.width),
                  channel=args.channel) for _path in args.path_to_target_dir
     ]
 
     unlabeled_dataset_loader = [
-        LoadData(path=_path,
+        LoadPACUnlabeledDataset(path=_path,
                  image_shape=(args.height, args.width),
                  channel=args.channel) for _path in args.path_to_unlabeled_dir
     ]
@@ -80,11 +80,6 @@ def train_model(args) -> None:
         }
     }
     # prepare the training dataset for ingesting it into the model
-    # source_dataset =
-
-    # prepare validation dataset for the ingestion process
-    # validation_dataset =
-
     for scope in DATA_DICT:
         if len(DATA_DICT[scope]["dataloader"]) > 1:
             for i in DATA_DICT[scope]["dataloader"][1:]:
@@ -94,9 +89,15 @@ def train_model(args) -> None:
                                      drop_remainder=True,
                                      prefetch=True,
                                      pertubed_images=scope == "unlabeled"))
+    
 
+    # lr decay
+    decay_steps = 1000
+    lr_decayed_fn = tf.keras.experimental.CosineDecay(
+        initial_learning_rate=args.lr, decay_steps=decay_steps)
+    
     trainer = BaseTrainer(model,
-                          optimizer=tf.keras.optimizers.Adam(args.lr),
+                          optimizer=tf.keras.optimizers.SGD(lr_decayed_fn, momentum=0.9),
                           log_file_name=args.log_file_path,
                           num_classes=len(
                               source_dataset_loader[0].root_labels))
@@ -111,13 +112,13 @@ def train_model_unsupervised(args) -> None:
     """
     # define data loader for the validation and trainer set
     source_dataset_loader = [
-        LoadData(path=_path,
+        LoadPACLabeledDataset(path=_path,
                  image_shape=(args.height, args.width),
                  channel=args.channel) for _path in args.path_to_source_dir
     ]
 
     unlabeled_dataset_loader = [
-        LoadData(path=_path,
+        LoadPACUnlabeledDataset(path=_path,
                  image_shape=(args.height, args.width),
                  channel=args.channel) for _path in args.path_to_unlabeled_dir
     ]
@@ -182,7 +183,7 @@ def evaluate(args) -> None:
                 num_hidden_units=[512, 512],
                 num_classes=len(prediction_dataloader.root_labels))
 
-    model.build(input_shape=(args.height, args.width, args.channel))
+    model.build(input_shape=(None,args.height, args.width, args.channel))
     model.load_weights(args.path_to_saved_weights)
 
 
@@ -267,15 +268,15 @@ if __name__ == "__main__":
 
     parser_semi.add_argument(
         "--height",
-        default=224,
+        default=128,
         type=int,
-        help="height of input images, default value is 224",
+        help="height of input images, default value is 128",
         dest="height")
     parser_semi.add_argument(
         "--width",
-        default=224,
+        default=128,
         type=int,
-        help="width of input images, default value is 224",
+        help="width of input images, default value is 128",
         dest="width")
     parser_semi.add_argument(
         "--channel",
@@ -331,14 +332,14 @@ if __name__ == "__main__":
         dest="log_file_path")
 
     parser_un.add_argument("--height",
-                           default=224,
+                           default=128,
                            type=int,
-                           help="height of input images, default value is 224",
+                           help="height of input images, default value is 128",
                            dest="height")
     parser_un.add_argument("--width",
-                           default=224,
+                           default=128,
                            type=int,
-                           help="width of input images, default value is 224",
+                           help="width of input images, default value is 128",
                            dest="width")
     parser_un.add_argument("--channel",
                            default=3,
@@ -368,15 +369,15 @@ if __name__ == "__main__":
 
     parser_eval.add_argument(
         "--height",
-        default=224,
+        default=128,
         type=int,
-        help="height of input images, default value is 224",
+        help="height of input images, default value is 128",
         dest="height")
     parser_eval.add_argument(
         "--width",
-        default=224,
+        default=128,
         type=int,
-        help="width of input images, default value is 224",
+        help="width of input images, default value is 128",
         dest="width")
     parser_eval.add_argument(
         "--channel",

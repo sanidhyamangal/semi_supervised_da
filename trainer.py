@@ -5,12 +5,14 @@ github:sanidhyamangal
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.ops.gen_math_ops import mean
-from datapipeline.transforms import GeneratePertuberations  # for deep learning
 
+from contrastive_loss import \
+    max_margin_contrastive_loss  # for marginal contrastive loss
+from datapipeline.transforms import GeneratePertuberations  # for deep learning
+from logger import logger
 from losses import compute_cr, compute_h  # for loss related ops
 from utils import create_folders_if_not_exists
-from logger import logger
+from models import SupervisedContrastiveEncoder, SupConProjector
 
 
 class BaseTrainer:
@@ -49,8 +51,7 @@ class BaseTrainer:
                     compute_h(tf.one_hot(labels, depth=self.num_classes),
                               pred))
 
-            imgs = unlabeled_batch.get_value()
-            pertubed_imgs = GeneratePertuberations(imgs)
+            imgs, pertubed_imgs = unlabeled_batch.get_value()
 
             px = self.model(imgs)
             qx = self.model(pertubed_imgs)
@@ -125,8 +126,7 @@ class UnsupervisedTrainer(BaseTrainer):
                     compute_h(tf.one_hot(labels, depth=self.num_classes),
                               pred))
 
-            imgs = unlabeled_batch.get_value()
-            pertubed_imgs = GeneratePertuberations(imgs)
+            imgs, pertubed_imgs = unlabeled_batch.get_value()
 
             px = self.model(imgs)
             qx = self.model(pertubed_imgs)
@@ -176,3 +176,58 @@ class UnsupervisedTrainer(BaseTrainer):
                 logger.info(f"Saving Weights at Epoch :{i} - Loss:{loss}")
 
         logger.info("Training Finished !!!!")
+
+
+class SuperConTrainer(BaseTrainer):
+    def __init__(self,
+                 encoder_model: SupervisedContrastiveEncoder,
+                 projector_model:tf.keras.models.Model,
+                 optimizer: tf.keras.optimizers.Adam,
+                 log_file_name: str = "logs.csv") -> None:
+        self.encoder_model = encoder_model
+        self.projector_model = projector_model
+        self.optimizer = optimizer
+        self.log_file_writer = log_file_name
+        self.base_loss = float("inf")
+
+        # call for the create log file writer logs
+        create_folders_if_not_exists(self.log_file_writer)
+
+    @tf.function
+    def train_step(self, images, labels):
+        with tf.GradientTape() as tape:
+
+            encoder = self.encoder_model(images, training=True)
+            projector = self.projector_model(encoder, training=True)
+
+            loss = max_margin_contrastive_loss(projector, labels, metric="cosine")
+
+        grads = tape.gradient(loss, self.encoder_model.trainable_variables+self.projector_model.trainable_variables)
+        self.optimizer.apply_gradients(zip(grads, self.encoder_model.trainable_variables+self.projector_model.trainable_variables))
+
+        return loss
+    
+
+    def train(self, train_steps:int, dataset, weights_path:str):
+
+        for epoch in range(train_steps):
+            epoch_loss_avg = []
+
+            for images, labels in dataset:
+                loss = self.train_step(images, labels)
+                epoch_loss_avg.append(loss)
+                logger.info(f"Batch Loss: {loss}")
+            
+            _ep_loss = np.mean(epoch_loss_avg)
+            self.write_logs_csv(_ep_loss)
+            logger.info(f"Epoch:{epoch}, Loss :{_ep_loss}")
+
+            if _ep_loss < self.base_loss:
+                self.save_weights(weights_path)
+                self.base_loss = _ep_loss
+                logger.info(f"Saving Weights at Epoch :{epoch} - Loss:{_ep_loss}")
+
+    def save_weights(self, path: str) -> None:
+
+        create_folders_if_not_exists(path)
+        self.encoder_model.base_model.save_weights(path)
