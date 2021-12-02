@@ -183,7 +183,7 @@ def evaluate(args) -> None:
                 num_hidden_units=[512, 512],
                 num_classes=len(prediction_dataloader.root_labels))
 
-    model.build(input_shape=(args.height, args.width, args.channel))
+    model.build(input_shape=(None,args.height, args.width, args.channel))
     model.load_weights(args.path_to_saved_weights)
 
 
