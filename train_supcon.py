@@ -78,15 +78,15 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--height",
-        default=224,
+        default=128,
         type=int,
-        help="height of input images, default value is 224",
+        help="height of input images, default value is 128",
         dest="height")
     parser.add_argument(
         "--width",
-        default=224,
+        default=128,
         type=int,
-        help="width of input images, default value is 224",
+        help="width of input images, default value is 128",
         dest="width")
     parser.add_argument(
         "--channel",
