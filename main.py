@@ -268,15 +268,15 @@ if __name__ == "__main__":
 
     parser_semi.add_argument(
         "--height",
-        default=224,
+        default=128,
         type=int,
-        help="height of input images, default value is 224",
+        help="height of input images, default value is 128",
         dest="height")
     parser_semi.add_argument(
         "--width",
-        default=224,
+        default=128,
         type=int,
-        help="width of input images, default value is 224",
+        help="width of input images, default value is 128",
         dest="width")
     parser_semi.add_argument(
         "--channel",
@@ -332,14 +332,14 @@ if __name__ == "__main__":
         dest="log_file_path")
 
     parser_un.add_argument("--height",
-                           default=224,
+                           default=128,
                            type=int,
-                           help="height of input images, default value is 224",
+                           help="height of input images, default value is 128",
                            dest="height")
     parser_un.add_argument("--width",
-                           default=224,
+                           default=128,
                            type=int,
-                           help="width of input images, default value is 224",
+                           help="width of input images, default value is 128",
                            dest="width")
     parser_un.add_argument("--channel",
                            default=3,
@@ -369,15 +369,15 @@ if __name__ == "__main__":
 
     parser_eval.add_argument(
         "--height",
-        default=224,
+        default=128,
         type=int,
-        help="height of input images, default value is 224",
+        help="height of input images, default value is 128",
         dest="height")
     parser_eval.add_argument(
         "--width",
-        default=224,
+        default=128,
         type=int,
-        help="width of input images, default value is 224",
+        help="width of input images, default value is 128",
         dest="width")
     parser_eval.add_argument(
         "--channel",
