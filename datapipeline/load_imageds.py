@@ -133,10 +133,7 @@ class LoadData(PreprocessMixin, BaseCreateDatasetMixin):
 
         return all_images_labels
 
-class LoadPACLabeledDataset(OnlyPerturbedMixin, PerturbedAndBaseMixin,LoadData):
-    pass
-
-class LoadPACUnlabeledDataset(PerturbedAndBaseMixin, LoadData):
+class LoadPACDataset(PerturbedAndBaseMixin,LoadData):
     pass
 
 class LoadSuperConData(OnlyPerturbedMixin, LoadData):

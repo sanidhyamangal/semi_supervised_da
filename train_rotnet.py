@@ -48,7 +48,7 @@ def train_model(args):
             epochs=args.epoch,
             callbacks=[_tb_callback, _model_check_points])
     
-    rotnet.load_weights(args.path_to_checkpoint)
+    rotnet.load_weights(args.path_to_checkpoint).expect_partial()
     create_folders_if_not_exists(args.path_to_save_weights)
     rotnet.base_model.save_weights(args.path_to_save_weights)
 
