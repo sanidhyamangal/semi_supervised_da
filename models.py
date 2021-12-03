@@ -13,7 +13,7 @@ class RotationNetModel(tf.keras.models.Model):
     def __init__(self,
                  image_shape: Tuple[int] = (244, 244, 3),
                  num_classes: int = 4,
-                 num_hidden_units: int = 256,
+                 num_hidden_units: int = 512,
                  *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
