@@ -97,7 +97,7 @@ def train_model(args) -> None:
         initial_learning_rate=args.lr, decay_steps=decay_steps)
     
     trainer = BaseTrainer(model,
-                          optimizer=tf.keras.optimizers.SGD(lr_decayed_fn, momentum=0.9),
+                          optimizer=tf.keras.optimizers.RMSprop(lr_decayed_fn),
                           log_file_name=args.log_file_path,
                           num_classes=len(
                               source_dataset_loader[0].root_labels))
