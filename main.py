@@ -92,12 +92,8 @@ def train_model(args) -> None:
     
 
     # lr decay
-    decay_steps = 1000
-    lr_decayed_fn = tf.keras.experimental.CosineDecay(
-        initial_learning_rate=args.lr, decay_steps=decay_steps)
-    
     trainer = BaseTrainer(model,
-                          optimizer=tf.keras.optimizers.RMSprop(lr_decayed_fn),
+                          optimizer=tf.keras.optimizers.Adam(args.lr),
                           log_file_name=args.log_file_path,
                           num_classes=len(
                               source_dataset_loader[0].root_labels))
