@@ -6,13 +6,8 @@ github:sanidhyamangal
 import tensorflow as tf  # for computing the loss
 import numpy as np  # for matrix maths
 
-
 def compute_h(px, qx):
-    _log_softmax = tf.math.log(qx + 1e-8)
-
-    H = tf.reduce_sum(tf.multiply(-px, _log_softmax), axis=1)
-
-    return H
+    return tf.losses.categorical_crossentropy(px, qx)
 
 
 def compute_cr(px, qx, tau):
