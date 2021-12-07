@@ -3,11 +3,13 @@ author:Sanidhya Mangal
 github:sanidhyamangal
 """
 
-import tensorflow as tf # for deep learning
+import tensorflow as tf  # for deep learning
+
 
 class UnitNormLayer(tf.keras.layers.Layer):
-    '''Normalize vectors (euclidean norm) in batch to unit hypersphere.
-    '''
+    """
+    A Unit Norm layer to project all the vectors on a unit norm.
+    """
     def __init__(self):
         super(UnitNormLayer, self).__init__()
 

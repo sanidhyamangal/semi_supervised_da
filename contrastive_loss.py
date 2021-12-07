@@ -1,3 +1,6 @@
+"""
+Borrwoed from: https://github.com/wangz10/contrastive_loss
+"""
 import numpy as np
 import tensorflow as tf
 import tensorflow_addons as tfa
@@ -6,11 +9,11 @@ import tensorflow_addons as tfa
 def pdist_euclidean(A):
     # Euclidean pdist
     # https://stackoverflow.com/questions/37009647/compute-pairwise-distance-in-a-batch-without-replicating-tensor-in-tensorflow
-    r = tf.reduce_sum(A*A, 1)
+    r = tf.reduce_sum(A * A, 1)
 
     # turn r into column vector
     r = tf.reshape(r, [-1, 1])
-    D = r - 2*tf.matmul(A, tf.transpose(A)) + tf.transpose(r)
+    D = r - 2 * tf.matmul(A, tf.transpose(A)) + tf.transpose(r)
     return tf.sqrt(D)
 
 
@@ -121,10 +124,7 @@ def supervised_nt_xent_loss(z, y, temperature=0.5, base_temperature=0.07):
     # mask: contrastive mask of shape [bsz, bsz], mask_{i,j}=1 if sample j
     #     has the same class as sample i. Can be asymmetric.
     mask = tf.cast(tf.equal(y, tf.transpose(y)), tf.float32)
-    anchor_dot_contrast = tf.divide(
-        tf.matmul(z, tf.transpose(z)),
-        temperature
-    )
+    anchor_dot_contrast = tf.divide(tf.matmul(z, tf.transpose(z)), temperature)
     # # for numerical stability
     logits_max = tf.reduce_max(anchor_dot_contrast, axis=1, keepdims=True)
     logits = anchor_dot_contrast - logits_max

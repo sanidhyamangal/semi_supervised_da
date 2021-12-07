@@ -24,20 +24,23 @@ def train_model(args) -> None:
     # define data loader for the validation and trainer set
     source_dataset_loader = [
         LoadPACDataset(path=_path,
-                 image_shape=(args.height, args.width),
-                 channel=args.channel) for _path in args.path_to_source_dir
+                       image_shape=(args.height, args.width),
+                       channel=args.channel)
+        for _path in args.path_to_source_dir
     ]
 
     target_dataset_loader = [
         LoadPACDataset(path=_path,
-                 image_shape=(args.height, args.width),
-                 channel=args.channel) for _path in args.path_to_target_dir
+                       image_shape=(args.height, args.width),
+                       channel=args.channel)
+        for _path in args.path_to_target_dir
     ]
 
     unlabeled_dataset_loader = [
         LoadPACDataset(path=_path,
-                 image_shape=(args.height, args.width),
-                 channel=args.channel) for _path in args.path_to_unlabeled_dir
+                       image_shape=(args.height, args.width),
+                       channel=args.channel)
+        for _path in args.path_to_unlabeled_dir
     ]
 
     logger.info(f"PRETRAINED WEIGHTS: {args.path_to_pretrained_weights}")
@@ -89,7 +92,6 @@ def train_model(args) -> None:
                                      drop_remainder=True,
                                      prefetch=True,
                                      pertubed_images=scope == "unlabeled"))
-    
 
     # lr decay
     trainer = BaseTrainer(model,
@@ -109,14 +111,16 @@ def train_model_unsupervised(args) -> None:
     # define data loader for the validation and trainer set
     source_dataset_loader = [
         LoadPACDataset(path=_path,
-                 image_shape=(args.height, args.width),
-                 channel=args.channel) for _path in args.path_to_source_dir
+                       image_shape=(args.height, args.width),
+                       channel=args.channel)
+        for _path in args.path_to_source_dir
     ]
 
     unlabeled_dataset_loader = [
         LoadPACDataset(path=_path,
-                 image_shape=(args.height, args.width),
-                 channel=args.channel) for _path in args.path_to_unlabeled_dir
+                       image_shape=(args.height, args.width),
+                       channel=args.channel)
+        for _path in args.path_to_unlabeled_dir
     ]
 
     logger.info(f"PRETRAINED WEIGHTS: {args.path_to_pretrained_weights}")
@@ -172,16 +176,17 @@ def train_model_unsupervised(args) -> None:
 
 def evaluate(args) -> None:
 
-    prediction_dataloader = LoadData(args.path_to_domain_dir, image_shape=[args.height, args.width])
-    prediction_dataset = prediction_dataloader.create_dataset(args.batch_size, autotune=AUTOTUNE)
-    
+    prediction_dataloader = LoadData(args.path_to_domain_dir,
+                                     image_shape=[args.height, args.width])
+    prediction_dataset = prediction_dataloader.create_dataset(
+        args.batch_size, autotune=AUTOTUNE)
+
     model = PAC(image_shape=(args.height, args.width, args.channel),
                 num_hidden_units=[512, 512],
                 num_classes=len(prediction_dataloader.root_labels))
 
-    model.build(input_shape=(None,args.height, args.width, args.channel))
+    model.build(input_shape=(None, args.height, args.width, args.channel))
     model.load_weights(args.path_to_saved_weights)
-
 
     accuracy = tf.keras.metrics.Accuracy()
 
@@ -191,14 +196,14 @@ def evaluate(args) -> None:
         _pred = model(imgs)
         _accu = accuracy(lbls, tf.argmax(_pred, axis=1))
         _accuracy_metric.append(_accu.numpy())
-    
 
     logger.info(f"EVALUATION ACCURACY:{np.mean(_accuracy_metric)}")
-    
 
 
 if __name__ == "__main__":
-    AUTOTUNE = tf.data.AUTOTUNE
+    AUTOTUNE = tf.data.AUTOTUNE # for parallel calls in dataset ops.
+
+    # Define parsers for the argument parsers
     parser = argparse.ArgumentParser(
         description="Script to train the models for the domain adaptation")
     subparsers = parser.add_subparsers(help='semi, unsupervised')
@@ -212,7 +217,7 @@ if __name__ == "__main__":
 
     parser_eval = subparsers.add_parser(
         'eval', help='Evaluate the performance for the target domain')
-    
+
     parser_semi.add_argument('--epoch',
                              type=int,
                              default=2,
@@ -345,13 +350,12 @@ if __name__ == "__main__":
 
     parser_un.set_defaults(func=train_model_unsupervised)
 
-
     parser_eval.add_argument('--batch_size',
                              type=int,
                              default=32,
                              help='number of samples in one batch',
                              dest="batch_size")
-    
+
     parser_eval.add_argument('--path_to_domain_dir',
                              required=True,
                              help='path to domain directory to eval',

@@ -11,16 +11,21 @@ from contrastive_loss import \
 from datapipeline.transforms import GeneratePertuberations  # for deep learning
 from logger import logger
 from losses import compute_cr, compute_h  # for loss related ops
+from models import SupConProjector, SupervisedContrastiveEncoder
 from utils import create_folders_if_not_exists
-from models import SupervisedContrastiveEncoder, SupConProjector
 
 
 class BaseTrainer:
+    """
+    Define base trainer to abstract the training ops for all the models.
+    """
     def __init__(self,
                  model: tf.keras.Model,
                  optimizer: tf.keras.optimizers.Adam,
                  log_file_name: str = "logs.csv",
                  num_classes: int = 65) -> None:
+        
+        # define all the models and base models for the training ops
         self.model = model
         self.optimizer = optimizer
         self.log_file_writer = log_file_name
@@ -31,9 +36,13 @@ class BaseTrainer:
         create_folders_if_not_exists(self.log_file_writer)
 
     def write_logs_csv(self, loss) -> None:
+        """
+        A small subroutine for writing the csv log files
+        """
         with open(self.log_file_writer, "a+") as fp:
             fp.write(f"{loss}\n")
 
+    @tf.function
     def train_step(self, source_batch, target_batch, unlabeled_batch):
         loss = 0
         with tf.GradientTape() as tape:
@@ -181,7 +190,7 @@ class UnsupervisedTrainer(BaseTrainer):
 class SuperConTrainer(BaseTrainer):
     def __init__(self,
                  encoder_model: SupervisedContrastiveEncoder,
-                 projector_model:tf.keras.models.Model,
+                 projector_model: tf.keras.models.Model,
                  optimizer: tf.keras.optimizers.Adam,
                  log_file_name: str = "logs.csv") -> None:
         self.encoder_model = encoder_model
@@ -200,15 +209,21 @@ class SuperConTrainer(BaseTrainer):
             encoder = self.encoder_model(images, training=True)
             projector = self.projector_model(encoder, training=True)
 
-            loss = max_margin_contrastive_loss(projector, labels, metric="cosine")
+            loss = max_margin_contrastive_loss(projector,
+                                               labels,
+                                               metric="cosine")
 
-        grads = tape.gradient(loss, self.encoder_model.trainable_variables+self.projector_model.trainable_variables)
-        self.optimizer.apply_gradients(zip(grads, self.encoder_model.trainable_variables+self.projector_model.trainable_variables))
+        grads = tape.gradient(
+            loss, self.encoder_model.trainable_variables +
+            self.projector_model.trainable_variables)
+        self.optimizer.apply_gradients(
+            zip(
+                grads, self.encoder_model.trainable_variables +
+                self.projector_model.trainable_variables))
 
         return loss
-    
 
-    def train(self, train_steps:int, dataset, weights_path:str):
+    def train(self, train_steps: int, dataset, weights_path: str):
 
         for epoch in range(train_steps):
             epoch_loss_avg = []
@@ -217,7 +232,7 @@ class SuperConTrainer(BaseTrainer):
                 loss = self.train_step(images, labels)
                 epoch_loss_avg.append(loss)
                 logger.info(f"Batch Loss: {loss}")
-            
+
             _ep_loss = np.mean(epoch_loss_avg)
             self.write_logs_csv(_ep_loss)
             logger.info(f"Epoch:{epoch}, Loss :{_ep_loss}")
@@ -225,7 +240,8 @@ class SuperConTrainer(BaseTrainer):
             if _ep_loss < self.base_loss:
                 self.save_weights(weights_path)
                 self.base_loss = _ep_loss
-                logger.info(f"Saving Weights at Epoch :{epoch} - Loss:{_ep_loss}")
+                logger.info(
+                    f"Saving Weights at Epoch :{epoch} - Loss:{_ep_loss}")
 
     def save_weights(self, path: str) -> None:
 
