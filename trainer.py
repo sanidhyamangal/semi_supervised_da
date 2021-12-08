@@ -288,9 +288,9 @@ class SuperConTrainer(BaseTrainer):
                 loss = self.train_step(images, labels)
                 epoch_loss_avg.append(loss)
                 logger.info(f"Batch Loss: {loss}")
+                self.write_logs_csv(loss)
 
             _ep_loss = np.mean(epoch_loss_avg)
-            self.write_logs_csv(_ep_loss)
             logger.info(f"Epoch:{epoch}, Loss :{_ep_loss}")
 
             if _ep_loss < self.base_loss:
