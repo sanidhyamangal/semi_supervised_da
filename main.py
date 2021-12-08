@@ -50,6 +50,8 @@ def train_model(args) -> None:
                 num_hidden_units=[512, 512],
                 num_classes=len(source_dataset_loader[0].root_labels),
                 weights=args.path_to_pretrained_weights)
+    
+    # create a datadict for the source target and unlabelled dataset
 
     DATA_DICT = {
         "source": {
@@ -93,12 +95,14 @@ def train_model(args) -> None:
                                      prefetch=True,
                                      pertubed_images=scope == "unlabeled"))
 
-    # lr decay
+    # init a base trainer for the models
     trainer = BaseTrainer(model,
                           optimizer=tf.keras.optimizers.Adam(args.lr),
                           log_file_name=args.log_file_path,
                           num_classes=len(
                               source_dataset_loader[0].root_labels))
+
+    # train the model                              
     trainer.train(args.epoch, DATA_DICT["source"]["dataset"],
                   DATA_DICT["target"]["dataset"],
                   DATA_DICT["unlabeled"]["dataset"], args.path_to_save_weights)
@@ -164,12 +168,14 @@ def train_model_unsupervised(args) -> None:
                                      prefetch=True,
                                      pertubed_images=scope == "unlabeled"))
 
+    # create a trainer instanace for the unsupervised learning
     trainer = UnsupervisedTrainer(model,
                                   optimizer=tf.keras.optimizers.Adam(args.lr),
                                   log_file_name=args.log_file_path,
                                   num_classes=len(
                                       source_dataset_loader[0].root_labels))
 
+    # train the model
     trainer.train(args.epoch, DATA_DICT["source"]["dataset"],
                   DATA_DICT["unlabeled"]["dataset"], args.path_to_save_weights)
 

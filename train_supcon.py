@@ -20,17 +20,19 @@ def train_model(args) -> None:
     """
     Helper function for train arg subparser to train the entire network
     """
-
+    # load the supercon dataloader
     supercon_dataloader = LoadSuperConData(args.path_to_data_dir,
                                            image_shape=(args.height,
                                                         args.width),
                                            channel=args.channel)
 
+    # cretae supcon dataset
     supercon_dataset = supercon_dataloader.create_dataset(args.batch_size,
                                                           autotune=AUTOTUNE)
     encoder_model = SupervisedContrastiveEncoder()
     projector_model = SupConProjector()
 
+    # define optimizer and trainer
     decay_steps = 1000
     lr_decayed_fn = tf.keras.experimental.CosineDecay(
         initial_learning_rate=0.001, decay_steps=decay_steps)
@@ -41,6 +43,7 @@ def train_model(args) -> None:
                               optimizer=optimizer,
                               log_file_name=args.log_file_path)
 
+    # train the model
     trainer.train(args.epoch, supercon_dataset, args.path_to_save_weights)
 
 
