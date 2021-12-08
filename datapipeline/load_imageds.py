@@ -12,7 +12,7 @@ from typing import Optional, Tuple
 # import tensorflow
 import tensorflow as tf
 
-from datapipeline.transforms import ApplyRandomMC
+from datapipeline.transforms import custom_augment
 
 
 class PreprocessMixin:
@@ -27,24 +27,72 @@ class PreprocessMixin:
         return tf.image.resize(decode_image, self.image_shape)
 
 
-class PerturbedImageProcessing:
+class OnlyPerturbedMixin(PreprocessMixin):
     def process_image(self, image_path):
-        # read image into a raw format
-        raw_image = tf.io.read_file(image_path)
+        un_augmented_image = super().process_image(image_path)
 
-        # decode the image
-        decode_image = tf.image.decode_png(raw_image, channels=self.channel)
+        return custom_augment(un_augmented_image)
 
-        # resize the image
-        decoded_image = tf.image.resize(decode_image, self.image_shape)
-        
-        # perform random image pertubation
-        perturbed_image = ApplyRandomMC(decode_image)
 
-        return perturbed_image
-        
+class PerturbedAndBaseMixin(PreprocessMixin):
+    def process_pertubed_images(self, image_path):
+        un_augmented_image = self.process_image(image_path)
 
-class LoadData(PreprocessMixin):
+        return un_augmented_image, custom_augment(un_augmented_image)
+
+
+class BaseCreateDatasetMixin:
+    def create_dataset(self,
+                       batch_size: int,
+                       shuffle: bool = True,
+                       autotune: Optional[int] = None,
+                       drop_remainder: bool = False,
+                       pertubed_images: bool = False,
+                       **kwargs):
+
+        cache = kwargs.pop('cache', False)
+        prefetch = kwargs.pop('prefetch', False)
+        num_transform_ops = kwargs.pop("num_transformation_ops", 4)
+
+        # make a dataset for the labels
+        labels_dataset = tf.data.Dataset.from_tensor_slices(
+            self.all_images_labels)
+
+        # develop an image dataset
+        image_dataset = tf.data.Dataset.from_tensor_slices(
+            self.all_images_path)
+
+        # process the image dataset
+        if pertubed_images:
+            image_dataset = image_dataset.map(self.process_pertubed_images,
+                                              num_parallel_calls=autotune)
+            ds = image_dataset
+        else:
+            image_dataset = image_dataset.map(self.process_image,
+                                              num_parallel_calls=autotune)
+            ds = tf.data.Dataset.zip((image_dataset, labels_dataset))
+
+        return self.perform_data_ops(ds, shuffle, cache, batch_size,
+                                     drop_remainder, prefetch)
+
+    def perform_data_ops(self, ds, shuffle, cache, batch_size, drop_remainder,
+                         prefetch):
+
+        # create a batch of dataset
+        ds = ds.batch(batch_size, drop_remainder=drop_remainder)
+
+        # check if cache is enabled or not
+        if cache:
+            ds = ds.cache()
+
+        # check if prefetch is specified or not
+        if prefetch:
+            ds = ds.prefetch(prefetch)
+
+        return ds
+
+
+class LoadData(PreprocessMixin, BaseCreateDatasetMixin):
     """
     A data loader class for loading images from the respective dirs
     """
@@ -72,10 +120,10 @@ class LoadData(PreprocessMixin):
         random.shuffle(self.all_images_path)
 
         # get the list of all the dirs
-        all_root_labels = [
+        all_root_labels = sorted([
             str(path.name) for path in self.path_to_dir.glob("*")
             if path.is_dir()
-        ]
+        ])
 
         # design the dict of the labels
         self.root_labels = dict((c, i) for i, c in enumerate(all_root_labels))
@@ -88,82 +136,41 @@ class LoadData(PreprocessMixin):
 
         return all_images_labels
 
-    def create_dataset(self,
-                       batch_size: int,
-                       shuffle: bool = True,
-                       autotune: Optional[int] = None,
-                       drop_remainder: bool = False,
-                       **kwargs):
 
-        cache = kwargs.pop('cache', False)
-        prefetch = kwargs.pop('prefetch', False)
-
-        # make a dataset for the labels
-        labels_dataset = tf.data.Dataset.from_tensor_slices(
-            self.all_images_labels)
-
-        # develop an image dataset
-        image_dataset = tf.data.Dataset.from_tensor_slices(
-            self.all_images_path)
-
-        # process the image dataset
-        image_dataset = image_dataset.map(self.process_image,
-                                          num_parallel_calls=autotune)
-
-        # combine and zip the dataset
-        ds = tf.data.Dataset.zip((image_dataset, labels_dataset))
-
-        # shuffle the dataset if present
-        if shuffle:
-            ds = ds.shuffle(len(self.all_images_labels))
-
-        # create a batch of dataset
-        ds = ds.batch(batch_size, drop_remainder=drop_remainder)
-
-        # check if cache is enabled or not
-        if cache:
-            ds = ds.cache()
-
-        # check if prefetch is specified or not
-        if prefetch:
-            ds = ds.prefetch(prefetch)
-
-        return ds
+class LoadPACDataset(PerturbedAndBaseMixin, LoadData):
+    """
+    Dataset Loader Class for loading the dataset for the PAC
+    """
+    pass
 
 
-class PredictionDataLoader(PreprocessMixin):
-    """ Data loader class for loading data as a prediction set """
-    def __init__(self,
-                 path,
-                 image_shape: Tuple[int] = (224, 224),
-                 channel: int = 3) -> None:
+class LoadSuperConData(OnlyPerturbedMixin, LoadData):
+    """
+    A data loader class for loading images from the respective dirs
+    """
+    def load_labels(self):
 
-        # load root path
-        self.path_to_dir = Path(path)
-        self.image_shape = image_shape
-        self.channel = channel
+        # path to all the images in list of str
         self.all_images_path = [
-            str(path) for path in self.path_to_dir.glob("*.png")
+            str(path) for path in self.path_to_dir.glob("*/*/*")
         ]
 
-    def create_dataset(self,
-                       batch_size: int,
-                       autotune: Optional[int] = None,
-                       **kwargs):
-        cache = kwargs.pop('cache', False)
-        prefetch = kwargs.pop('prefetch', False)
+        # shuffle the images to add variance
+        random.shuffle(self.all_images_path)
 
-        image_ds = tf.data.Dataset.from_tensor_slices(self.all_images_path)
+        # get the list of all the dirs
+        all_root_labels = list({
+            str(path.name)
+            for path in self.path_to_dir.glob("*/*") if path.is_dir()
+        })
 
-        image_ds = image_ds.map(self.process_image,
-                                num_parallel_calls=autotune).batch(batch_size)
+        # design the dict of the labels
+        self.root_labels = dict((c, i) for i, c in enumerate(all_root_labels))
 
-        # check if cache is enabled or not
-        if cache:
-            image_ds = image_ds.cache()
+        # add the labels for all the images
+        all_images_labels = [
+            self.root_labels[Path(image).parent.name]
+            for image in self.all_images_path
+        ]
 
-        # check if prefetch is specified or not
-        if prefetch:
-            image_ds = image_ds.prefetch(prefetch)
-
-        return image_ds
+        return all_images_labels
